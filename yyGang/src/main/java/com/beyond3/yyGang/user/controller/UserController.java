@@ -57,7 +57,7 @@ public class UserController {
         user.setName(userJoinDTO.getName());
         user.setEmail(userJoinDTO.getEmail());
         user.setPassword(userJoinDTO.getUserPwd());
-        user.setRole("CUSTOMER");  // 기본적으로 Customer가 되도록
+        user.setRole(Role_name.ADMIN);  // 기본적으로 Customer가 되도록
         user.setAddress(userJoinDTO.getAddress());
 
         user.builder()

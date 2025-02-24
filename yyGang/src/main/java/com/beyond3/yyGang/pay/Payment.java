@@ -1,6 +1,6 @@
 package com.beyond3.yyGang.pay;
 
-import com.beyond3.yyGang.order.Order;
+import com.beyond3.yyGang.order.domain.Order;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
