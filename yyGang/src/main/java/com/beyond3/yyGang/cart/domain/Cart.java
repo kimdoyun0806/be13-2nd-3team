@@ -43,9 +43,11 @@ public class Cart {
         this.user = user;
     }
 
-    public static Cart createCart(User user) {
-        return Cart.builder()
-                .user(user)
-                .build();
-    }
+    // 유저에서 카트 생성
+//    public static Cart createCart(User user) {
+//        return Cart.builder()
+//                .user(user)
+//                .build();
+//    }
 }
+

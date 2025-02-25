@@ -15,17 +15,17 @@ public class UserRepository {
     private final EntityManager em;
 
     // 회원 가입
-    public void save(User user){
+    public void save(User user) {
         em.persist(user);
     }
 
     // 회원 아이디 - 단건 조회
-    public User findById(Long id){
+    public User findById(Long id) {
         return em.find(User.class, id);
     }
 
     // 회원 이메일 조회
-    public User findByEmail(String email){
+    public User findByEmail(String email) {
         // 이메일은 unique한 값 -> 값이 이미 있으면 return
         List<User> result = em.createQuery("select u from User u where u.email = :email", User.class)
                 .setParameter("email", email)
@@ -35,7 +35,7 @@ public class UserRepository {
     }
 
     // 전체 회원 조회 -> 관리자 기능
-    public List<User> findAll(){
+    public List<User> findAll() {
         return em.createQuery("select u from User u", User.class)
                 .getResultList();
     }

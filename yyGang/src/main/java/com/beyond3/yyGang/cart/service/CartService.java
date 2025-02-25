@@ -27,6 +27,8 @@ import java.util.List;
 public class CartService {
 
 
+
+
     private final CartRepository cartRepository;
     private final CartOptionRepository cartOptionRepository;
     private final UserRepository userRepository;
@@ -38,6 +40,7 @@ public class CartService {
     public Long addCart(CartOptionDto cartOptionDto, String email) {
 
         User user = userRepository.findByEmail(email);
+        // 유저 아이디로 찾기
 
         if (user == null) {
             throw new EntityNotFoundException("User not found with email: " + email);
@@ -46,11 +49,11 @@ public class CartService {
 
         Cart cart = cartRepository.findByUser_UserId(user.getUserId());
 
-        // 장바구니가 존재하지 않을 때 (회원가입을 하면 카트 하나를 바로 생성해야 하는데 이 부분은 확인할 것)
-        if (cart == null) {
-            cart = Cart.createCart(user);
-            cartRepository.save(cart);
-        }
+//        // 장바구니가 존재하지 않을 때 (회원가입을 하면 카트 하나를 바로 생성해야 하는데 이 부분은 확인할 것)
+//        if (cart == null) {
+//            cart = Cart.createCart(user);
+//            cartRepository.save(cart);
+//        }
 
         // 영양제 찾기
         NSupplement nSupplement = nSupplementRepository.findById(cartOptionDto.getProductId())
@@ -60,17 +63,17 @@ public class CartService {
         CartOption cartOption = cartOptionRepository.findByCartIdAndProductId(cart.getCartId(), nSupplement.getProductId());
 
 
-        //해당 상품이 장바구니에 없으면 생성 후 추가
-        if (cartOption == null) {
-            cartOption = CartOption.createCartSupplements(cart, nSupplement, cartOptionDto.getCount());
-            cartOptionRepository.save(cartOption);
-
-        }
-
-        //상품이 이미 있으면 수량 업데이트
-        else {
-            cartOption.addQuantity(cartOptionDto.getCount());
-        }
+//        //해당 상품이 장바구니에 없으면 생성 후 추가
+//        if (cartOption == null) {
+//            cartOption = CartOption.createCartOption(cart, nSupplement, cartOptionDto.getCount());
+//            cartOptionRepository.save(cartOption);
+//        }
+//
+//        //상품이 이미 있으면 수량 업데이트
+//        // 없어도 됌 지워도 될것 같다
+//        else {
+//            cartOption.addQuantity(cartOptionDto.getCount());
+//        }
 
         return cartOption.getCartOptionID();
     }
