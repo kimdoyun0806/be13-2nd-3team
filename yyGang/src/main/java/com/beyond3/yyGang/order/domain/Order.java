@@ -3,6 +3,7 @@ package com.beyond3.yyGang.order.domain;
 import com.beyond3.yyGang.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -10,13 +11,11 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "`order`")
 @AllArgsConstructor
-@Table(name = "orders")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Order {
     //주문
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id")
@@ -30,43 +29,42 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
+    @CreationTimestamp
+    @Column(name = "order_date", columnDefinition = "TIMESTAMP")
     private LocalDateTime orderDate;
+
+//    @OneToMany(mappedBy = "order")
+//    private List<OrderOption> orderOptions;
+
+    @Builder
+    private Order(User user, OrderStatus orderStatus) {
+        this.user = user;
+        this.orderStatus = orderStatus;
+    }
+
+    public void setOrderStatus(OrderStatus orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    // Order를 생성한다고 명시적으로 표현
+    public static Order createOrder(User user) {
+
+        return Order.builder()
+                .user(user)
+                .orderStatus(OrderStatus.PENDING) // 기본적으로 PENDING 상태로 설정
+                .build();
+    }
+
 
     //    @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
 //    private Payment payment;
-//
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<OrderOption> orderOptions = new ArrayList<>();
 
-    public void addOrderOption(OrderOption orderOption) {
-        orderOptions.add(orderOption);
-        orderOption.setOrder(this);
-    }
-
-    public static Order createOrder(User user, List<OrderOption> orderOptionList) {
-        Order order = new Order();
-        order.setUser(user);
-        for (OrderOption orderOption : orderOptionList) {
-            order.addOrderOption(orderOption);
-        }
-        order.setOrderDate(LocalDateTime.now());
-        order.setOrderStatus(OrderStatus.ORDERED);
-        return order;
-    }
-
-    public int getTotalPrice(){
-        int totalPrice = 0;
-
-        for (OrderOption orderOption : orderOptions) {
-            totalPrice += orderOption.getTotalPrice();
-        }
-        return totalPrice;
-    }
-
-    public void orderCancel() {
-        this.orderStatus = OrderStatus.CANCELED;
-        for (OrderOption orderOption : orderOptions) {
-            orderOption.cancel();
-        }
-    }
+//    private Order(User user, OrderOption... orderOptions) {
+//        this.user = user;
+//        // Order에 OrderOption객체를 저장하고 OrderOption에 Order객체를 저장
+//        for (OrderOption orderOption : orderOptions) {
+//            this.orderOptions.add(orderOption);
+//            orderOption.setOrder(this);
+//        }
+//    }
 }

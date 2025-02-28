@@ -2,149 +2,105 @@ package com.beyond3.yyGang.cart.service;
 
 import com.beyond3.yyGang.cart.domain.Cart;
 import com.beyond3.yyGang.cart.domain.CartOption;
-import com.beyond3.yyGang.cart.dto.CartListDto;
-import com.beyond3.yyGang.cart.dto.CartOptionDto;
-import com.beyond3.yyGang.cart.dto.CartOrderDto;
+
 import com.beyond3.yyGang.cart.repository.CartOptionRepository;
 import com.beyond3.yyGang.cart.repository.CartRepository;
-import com.beyond3.yyGang.nsupplement.domain.NSupplement;
-import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
-import com.beyond3.yyGang.order.dto.OrderDto;
-import com.beyond3.yyGang.order.service.OrderService;
+import com.beyond3.yyGang.nsupplement.NSupplement;
+import com.beyond3.yyGang.nsupplement.NSupplementRepository;
+
+import com.beyond3.yyGang.security.JwtTokenProvider;
 import com.beyond3.yyGang.user.domain.User;
 import com.beyond3.yyGang.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CartService {
 
-
-
-
-    private final CartRepository cartRepository;
     private final CartOptionRepository cartOptionRepository;
+    private final CartRepository cartRepository;
     private final UserRepository userRepository;
     private final NSupplementRepository nSupplementRepository;
-    private final OrderService orderService;
 
-    // 장바구니 담기
-    @Transactional
-    public Long addCart(CartOptionDto cartOptionDto, String email) {
-
-        User user = userRepository.findByEmail(email);
-        // 유저 아이디로 찾기
-
-        if (user == null) {
-            throw new EntityNotFoundException("User not found with email: " + email);
-        }
-
-
-        Cart cart = cartRepository.findByUser_UserId(user.getUserId());
-
-//        // 장바구니가 존재하지 않을 때 (회원가입을 하면 카트 하나를 바로 생성해야 하는데 이 부분은 확인할 것)
-//        if (cart == null) {
-//            cart = Cart.createCart(user);
-//            cartRepository.save(cart);
-//        }
-
-        // 영양제 찾기
-        NSupplement nSupplement = nSupplementRepository.findById(cartOptionDto.getProductId())
-                .orElseThrow(() -> new EntityNotFoundException("NSupplement not found with id: " + cartOptionDto.getProductId()));
-
-//        NSupplement nSupplement = nSupplementRepository.findById(cartOptionDto.getProductId()).orElseThrow(EntityNotFoundException::new);
-        CartOption cartOption = cartOptionRepository.findByCartIdAndProductId(cart.getCartId(), nSupplement.getProductId());
-
-
-//        //해당 상품이 장바구니에 없으면 생성 후 추가
-//        if (cartOption == null) {
-//            cartOption = CartOption.createCartOption(cart, nSupplement, cartOptionDto.getCount());
-//            cartOptionRepository.save(cartOption);
-//        }
-//
-//        //상품이 이미 있으면 수량 업데이트
-//        // 없어도 됌 지워도 될것 같다
-//        else {
-//            cartOption.addQuantity(cartOptionDto.getCount());
-//        }
-
-        return cartOption.getCartOptionID();
-    }
-
-    // 장바구니 조회 기능
-    public List<CartListDto> getCartList(String email) {
-
-        List<CartListDto> cartListDtos = new ArrayList<>();
-
-        User user = userRepository.findByEmail(email);
-        Cart cart = cartRepository.findByUser_UserId(user.getUserId());
-
-        // 장바구니가 없다면 빈 리스트를 반환 회원과 장바구니는 동시에 생성되니 필요는 없겠지만
-        // 혹시 모를 예외처리(NullPointException)를 위함
-        if (cart == null) {
-            return cartListDtos;
-        }
-
-        // CartOptionRepository 확인할 것
-        cartListDtos = cartOptionRepository.findByCartListDto(cart.getCartId());
-        return cartListDtos;
-    }
-
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
-    // 장바구니 상품 수량 업데이트
-    public void updateCartProductQuantity(Long cartOptionId, int count) {
+    // 사용자가 장바구니에 영양제 추가 기능
+    public Long addCartOption(Long userId, Long nSupplementId, int quantity) {
+
+        User findUser = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found for userId"));   // 사용자 확인 메서드
+
+        NSupplement findNSupplement = nSupplementRepository.findById(nSupplementId)
+                .orElseThrow(() -> new EntityNotFoundException("NSupplement not found for nSupplementId")); // 해당 영양제 확인
+
+        Cart findCart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Cart not found for userId"));   // 장바구니 있는지 확인
+
+        CartOption cartOption = CartOption.createCartOption(findCart, findNSupplement, quantity);
+        // 새로운 cartoption 객체 생성
+
+        CartOption saveCartOption = cartOptionRepository.save(cartOption);
+        // cartOption 객체 저장
+
+        return saveCartOption.getCartOptionID();
+    }
+
+    // void와 Long중 어느 거 사용, user를 파라미터로 받아와야 하는지???
+    // List
+    // 장바구니에서 선택한 아이템 삭제 기능
+    @Transactional
+    public void deleteCartOption(Long cartOptionId/*, Long userId*/) {
+        // User findUser = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User not found for userId"));
+        CartOption findCartOption = cartOptionRepository.findById(cartOptionId).orElseThrow(() -> new EntityNotFoundException("CartOption not found for CartOptionId"));
+        //Cart findCart = cartRepository.findByUserId(userId).orElseThrow(() -> new EntityNotFoundException("Cart not found for userId"));
+
+        cartOptionRepository.delete(findCartOption);
+    }
+
+    @Transactional
+    // 장바구니 상품 수량, 가격 업데이트
+    public void updateCartProduct(Long cartOptionId, int count) {
         CartOption cartOption = cartOptionRepository.findById(cartOptionId).orElseThrow(EntityNotFoundException::new);
-        cartOption.updateQuantity(count);
+        cartOption.updateSupplement(count);
     }
 
     @Transactional
-    // 장바구니 상품 삭제
-    public void deleteCartProduct(Long cartOptionId) {
-        CartOption cartOption = cartOptionRepository.findById(cartOptionId).orElseThrow(EntityNotFoundException::new);
-        cartOptionRepository.delete(cartOption);
+    public List<CartOption> getCartListFormToken(String token){
+        String userEmailFromToken = getUserEmailFromToken(token);   // 토큰을 받아 사용자 이메일 반환
+        User user = getUserFromEmail(userEmailFromToken);   // 사용자 이메일로 사용자 찾기
+
+        Long cartId = cartRepository.findByUserId(user.getUserId()).get().getCartId();  // 사용자에게서 id를 받아서 cartId 조회
+        List<CartOption> cartList = cartOptionRepository.findByCartId(cartId);  // 해당 cartId를 갖는 CartOption 리스트를 조회
+        return cartList;
     }
 
-    @Transactional
-    //장바구니 상품 일괄 주문
-    public Long orderCartProduct(List<CartOrderDto> cartOrderDtoList, String email) {
+    // Token 정보에서 Email 추출하기
+    private String getUserEmailFromToken(String token){
+        String trimToken = token.substring(7).trim();
 
-        List<OrderDto> orderDtoList = new ArrayList<>();
-
-        /*
-            1. OrderDto 갹체 생성
-            2. CartOrderDto에 있는 상품Id를 사용해서 CartOption 조회
-            3. OrderDto에서 상품Id, 수량 설정
-            4. OrderDto를 CartOrderList에 추가
-         */
-        for(CartOrderDto cartOrderDto : cartOrderDtoList) {
-            OrderDto orderDto = new OrderDto();
-            CartOption cartOption = cartOptionRepository.findById(cartOrderDto.getCartProductId()).orElseThrow(EntityNotFoundException::new);
-            orderDto.setProductId(cartOption.getNSupplement().getProductId());
-            orderDto.setCount(cartOption.getQuantity());
-            orderDtoList.add(orderDto);
+        if(!jwtTokenProvider.validateToken(trimToken)){
+            // 토큰이 유효하지 않은 경우
+            throw new UsernameNotFoundException("유효하지 않은 토큰입니다.");
         }
-
-        Long orderId = orderService.orders(orderDtoList, email);
-
-        // 주문한 장바구니 상품 제거
-        for(CartOrderDto cartOrderDto  : cartOrderDtoList) {
-            CartOption cartOption = cartOptionRepository.findById(cartOrderDto.getCartProductId()).orElseThrow(EntityNotFoundException::new);
-            cartOptionRepository.delete(cartOption);
-        }
-
-        // 주문 아이디 반환
-        return orderId;
+        return jwtTokenProvider.getAuthentication(trimToken).getName();
     }
 
-    // 장바구니 상품 개별 주문?
-
+    private User getUserFromEmail(String userEmail){
+        Optional<User> optionalUser = userRepository.findByEmail(userEmail);
+        if(optionalUser.isEmpty()){
+            // 존재하지 않는 이메일이면?
+            throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
+        }
+        return optionalUser.get();
+    }
 }
-

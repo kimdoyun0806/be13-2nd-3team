@@ -31,14 +31,12 @@ public class JwtTokenProvider {
     private final Key key;  // JWT 서명에 사용될 비밀 키
 
     // Secret Key의 초기화 부분
-    public JwtTokenProvider(
-            // application.properties에서 설정한 비밀키를 가져옴
-            @Value("${jwt.secret.key}") String secretKey
-    ) {
+    public JwtTokenProvider(@Value("${jwt.secret.key}") String secretKey ) {
         // Secret Key를 Base64로 디코딩 -> 바이트 배열로 변환
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         // HMAC-SHA 알고리즘을 사용할 수 있는 서명용 비밀 키로 변환, this.key에 저장
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        // BASE64 디코딩을 통해 더 안전하게 처리
     }
 
     // User 정보를 바탕으로 Access Token, Refresh Token 생성
@@ -77,16 +75,17 @@ public class JwtTokenProvider {
     }
 
     // JWT 토큰을 복호화해서 토큰에 들어있는 정보를 꺼내는 메서드
+    // 꺼낸 정보를 바탕으로 SecurityHolder에 들어갈 Authentication 객체를 생성해줌
     public Authentication getAuthentication(String accessToken) {
         Claims claims = parseClaims(accessToken); // claims로 parsing
 
-        if(claims.get("auths") != null) {
+        if(claims.get("auths") == null) {
             throw new RuntimeException("권한 정보가 없는 Token입니다.");
         }
 
         // "auths" 라는 이름으로 만들어진 권한 claim을 꺼내서 권한 collection 리스트로 반환
         Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get("auth").toString().split(","))
+                Arrays.stream(claims.get("auths").toString().split(","))
                         .map(SimpleGrantedAuthority::new)   // 각 권한을 SimpleGrantedAuthoruty 객체로 변환
                         .collect(Collectors.toList());
 

@@ -12,13 +12,13 @@ import java.util.List;
 
 public interface CartOptionRepository extends JpaRepository<CartOption, Long> {
 
-//    CartOption findByCart_CartIdAndNSupplement_ProductId(Long cartId, Long productId);
+//    @Query("SELECT co FROM CartOption co WHERE co.cart.cartId = :cartId AND co.nSupplement.productId = :productId")
+//    CartOption findByCartIdAndProductId(@Param("cartId") Long cartId, @Param("productId") Long productId);
 
-    @Query("SELECT co FROM CartOption co WHERE co.cart.cartId = :cartId AND co.nSupplement.productId = :productId")
-    CartOption findByCartIdAndProductId(@Param("cartId") Long cartId, @Param("productId") Long productId);
+    @Query("select co from CartOption co where co.cart.cartId = :cartId")
+    List<CartOption> findByCartId(@Param("cartId") Long cartId);
 
-    @Query("SELECT new com.beyond3.yyGang.cart.dto.CartListDto(co.cartOptionID, s.productName, s.price, co.quantity) " +
+    @Query("SELECT new com.beyond3.yyGang.cart.dto.CartListDto(co.cartOptionID, s.productName, s.price, co.quantity, s.brand) " +
             "FROM CartOption co JOIN co.nSupplement s WHERE co.cart.cartId = :cartId")
-    List<CartListDto> findByCartListDto(@Param("cartId") Long cartId);
-
+    List<CartListDto>findCartListDtoByCartId(@Param("cartId") Long cartId);
 }

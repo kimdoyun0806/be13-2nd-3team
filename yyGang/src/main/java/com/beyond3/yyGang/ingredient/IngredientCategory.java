@@ -1,6 +1,6 @@
 package com.beyond3.yyGang.ingredient;
 
-import com.beyond3.yyGang.nsupplement.domain.NSupplement;
+import com.beyond3.yyGang.nsupplement.NSupplement;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
