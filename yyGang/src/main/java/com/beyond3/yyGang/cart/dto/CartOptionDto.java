@@ -1,18 +1,38 @@
 package com.beyond3.yyGang.cart.dto;
 
+import com.beyond3.yyGang.cart.domain.CartOption;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class CartOptionDto {
 
-    private Long nSupplementId;    // 영양제 아이디
+    private Long cartOptionId;
 
-    private int quantity; // 수량
+    private Long nSupplementId;
 
-    private int price;  // 가격
+    private String nSupplementName;
+
+    private String brand;
+
+    private int quantity;
+
+    private int price;
+
+    public static CartOptionDto fromCartOption(CartOption cartOption) {
+        return CartOptionDto.builder()
+                .cartOptionId(cartOption.getCartOptionID())
+                .nSupplementId(cartOption.getNSupplement().getProductId())
+                .nSupplementName(cartOption.getNSupplement().getProductName())
+                .brand(cartOption.getNSupplement().getBrand())
+                .quantity(cartOption.getQuantity())
+                .price(cartOption.getPrice())
+                .build();
+    }
+
 
 }

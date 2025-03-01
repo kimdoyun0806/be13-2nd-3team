@@ -33,7 +33,7 @@ public class CartOption {
         this.nSupplement = nSupplement;
         this.quantity = quantity;
         this.price = calculateCartOptionPrice();
-//        this.cart.addCartOption(this);
+        this.cart.addCartOption(this);
     }
 
     public static CartOption createCartOption(Cart cart, NSupplement nSupplement, int quantity) {
