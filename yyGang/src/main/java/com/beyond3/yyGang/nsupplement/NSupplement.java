@@ -1,22 +1,21 @@
 package com.beyond3.yyGang.nsupplement;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.beyond3.yyGang.productCategory.ProductCategory;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Getter
 @Builder
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
-@AllArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 @Table(name = "n_supplement")
 public class NSupplement {
 
@@ -24,7 +23,7 @@ public class NSupplement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "product_id")
-    private Long productId;  // 리뷰 아이디
+    private Long productId;
 
     private String productName; // 상품 이름
 
@@ -36,6 +35,9 @@ public class NSupplement {
     private int price;  // 상품 가격
 
     private int stockQuantity;
+
+    @OneToMany(mappedBy = "nSupplement", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ProductCategory> productCategories = new HashSet<>();
 
 //    @OneToMany(mappedBy = "nSupplements")
 //    private List<Review> reviews;
@@ -63,7 +65,7 @@ public class NSupplement {
     }
 
     public void decreaseStockQuantity(int quantity){
-        if(stockQuantity - quantity >= 0){
+        if(stockQuantity - quantity < 0){
             throw new IllegalStateException("재고가 충분하지 않습니다.");
         }
         this.stockQuantity -= quantity;

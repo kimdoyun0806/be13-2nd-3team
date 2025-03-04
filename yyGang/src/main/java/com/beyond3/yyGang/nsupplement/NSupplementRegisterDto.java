@@ -19,6 +19,7 @@ public class NSupplementRegisterDto {
 
     private String caution; // 주의 사항
 
+
     @NotEmpty(message = "브랜드 명은 필수입니다.")
     private String brand;  // 브랜드
 
@@ -35,5 +36,14 @@ public class NSupplementRegisterDto {
                 .price(price)
                 .stockQuantity(stockQuantity)
                 .build();
+    }
+
+    public NSupplementRegisterDto(NSupplement product) {
+        this.productName = product.getProductName();
+        this.caution = product.getCaution();
+        this.brand = product.getBrand();
+        this.price = product.getPrice();
+        this.stockQuantity = product.getStockQuantity();
+
     }
 }
