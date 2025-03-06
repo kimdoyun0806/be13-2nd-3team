@@ -1,17 +1,11 @@
 package com.beyond3.yyGang.user.domain;
 
+import com.beyond3.yyGang.handler.exception.UserException;
+import com.beyond3.yyGang.handler.message.UserExceptionMessage;
+import com.beyond3.yyGang.review.Review;
 import com.beyond3.yyGang.user.dto.UserInfoDto;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.beyond3.yyGang.user.dto.UserModifyDto;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
@@ -30,13 +24,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Entity
 @Data
 @Table(name = "user")
 @AllArgsConstructor // 모든 필드 값이 있는 경우는 생성자로 생성하도록
-@NoArgsConstructor(access = AccessLevel.PUBLIC)  // 기본 생성자 자동 추가 막음
+@NoArgsConstructor(access = AccessLevel.PROTECTED)  // 기본 생성자 자동 추가 막음
 @Builder
 public class User implements UserDetails {
 
@@ -76,6 +71,9 @@ public class User implements UserDetails {
 
     private String address; // 주소
 
+    @OneToMany(mappedBy = "user")
+    private List<Review> reviews;
+
     public User(Role_name role, String email, String password, String name, Gender gender) {
         this.role = role;
         this.email = email;
@@ -84,19 +82,22 @@ public class User implements UserDetails {
         this.gender = gender;
     }
 
-    public UserInfoDto toUserInfoDto() {
-        return UserInfoDto.builder()
-                .email(email)
-                .password(password)
-                .name(name)
-                .role(role)
-                .age(age)
-                .gender(gender)
-                .phone(phone)
-                .address(address)
-                .createdDate(createdDate)
-                .build();
+    public void updateUserInfo(UserModifyDto dto) {
+        Optional.ofNullable(dto.getName()).ifPresent(this::setName);
+        Optional.ofNullable(dto.getRole()).ifPresent(
+                role -> {
+                    if(role.equals(Role_name.ADMIN)) {
+                        throw new UserException(UserExceptionMessage.CANNOT_SELECT_ADMIN);
+                    }
+                    this.role = role;
+                }
+        );
+        Optional.ofNullable(dto.getAge()).ifPresent(this::setAge);
+        Optional.ofNullable(dto.getGender()).ifPresent(this::setGender);
+        Optional.ofNullable(dto.getPhone()).ifPresent(this::setPhone);
+        Optional.ofNullable(dto.getAddress()).ifPresent(this::setAddress);
     }
+
 
     @Override
     // 사용자 권한을 객체로 반환하는 기능을 수행함 -> ROLE_ADMIN, ROLE_SELLER ...
@@ -142,9 +143,6 @@ public class User implements UserDetails {
     /*===================================================================*/
 
     /*===================================================================*/
-
-//    @OneToMany(mappedBy = "users")
-//    private List<Review> reviews;
 //
 //    @OneToMany(mappedBy = "users")
 //    private List<QuestionBoard> questionBoards;

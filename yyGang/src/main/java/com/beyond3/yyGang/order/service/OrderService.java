@@ -2,7 +2,7 @@ package com.beyond3.yyGang.order.service;
 
 import com.beyond3.yyGang.cart.dto.CartRequestDto;
 import com.beyond3.yyGang.nsupplement.NSupplement;
-import com.beyond3.yyGang.nsupplement.NSupplementRepository;
+import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
 import com.beyond3.yyGang.order.dto.OrderDto;
 import com.beyond3.yyGang.order.domain.Order;
 import com.beyond3.yyGang.order.domain.OrderOption;
@@ -11,7 +11,7 @@ import com.beyond3.yyGang.order.dto.OrderResultDto;
 import com.beyond3.yyGang.order.repository.OrderOptionRepository;
 import com.beyond3.yyGang.order.repository.OrderRepository;
 import com.beyond3.yyGang.pay.repository.PersonalAccountRepository;
-import com.beyond3.yyGang.security.JwtTokenProvider;
+import com.beyond3.yyGang.auth.JwtTokenProvider;
 import com.beyond3.yyGang.user.domain.User;
 import com.beyond3.yyGang.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;

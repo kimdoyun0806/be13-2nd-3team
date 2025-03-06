@@ -1,6 +1,6 @@
 package com.beyond3.yyGang.category;
 
-import com.beyond3.yyGang.nsupplement.NSupplementRegisterDto;
+import com.beyond3.yyGang.nsupplement.dto.NSupplementRegisterDto;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +8,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RequestMapping("/categories")
@@ -27,10 +29,20 @@ public class CategoryController {
 
     @GetMapping("/products/{productId}")
     @Operation(summary = "제품 상세 조회", description = "제품 상세 정보를 조회한다.")
-    public ResponseEntity<NSupplementRegisterDto> detail( @PathVariable Long productId) {
+    public ResponseEntity<NSupplementRegisterDto> detail(@PathVariable Long productId) {
 
         NSupplementRegisterDto product = categoryService.getProduct(productId);
         return ResponseEntity.ok(product);
     }
+
+        /**
+         * 특정 카테고리의 자식 카테고리 목록 조회
+         */
+        @GetMapping("/{parentId}/children")
+        public ResponseEntity<List<CategoryDto>> getChildrenCategories(@PathVariable Long parentId) {
+            List<CategoryDto> children = categoryService.getChildrenCategories(parentId);
+            return ResponseEntity.ok(children);
+        }
+
 
 }

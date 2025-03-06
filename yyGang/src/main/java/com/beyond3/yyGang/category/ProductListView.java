@@ -1,6 +1,6 @@
 package com.beyond3.yyGang.category;
 
-import com.beyond3.yyGang.nsupplement.NSupplementDto;
+import com.beyond3.yyGang.nsupplement.dto.NSupplementDto;
 import lombok.Data;
 
 import java.util.ArrayList;

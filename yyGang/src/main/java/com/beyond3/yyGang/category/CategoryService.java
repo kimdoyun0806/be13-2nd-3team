@@ -1,12 +1,12 @@
 package com.beyond3.yyGang.category;
 
-import com.beyond3.yyGang.exception.message.CategoryEntityException;
-import com.beyond3.yyGang.exception.message.ExceptionMessage;
-import com.beyond3.yyGang.exception.message.ProductEntityException;
+import com.beyond3.yyGang.handler.message.CategoryEntityException;
+import com.beyond3.yyGang.handler.message.CategoryExceptionMessage;
+import com.beyond3.yyGang.handler.message.ProductEntityException;
 import com.beyond3.yyGang.nsupplement.NSupplement;
-import com.beyond3.yyGang.nsupplement.NSupplementDto;
-import com.beyond3.yyGang.nsupplement.NSupplementRegisterDto;
-import com.beyond3.yyGang.nsupplement.NSupplementRepository;
+import com.beyond3.yyGang.nsupplement.dto.NSupplementDto;
+import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
+import com.beyond3.yyGang.nsupplement.dto.NSupplementRegisterDto;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,7 +27,7 @@ public class CategoryService {
 
     public CategoryDto getCategory(Long categoryId) {
         Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new CategoryEntityException(ExceptionMessage.CATEGORY_NOT_FOUND));
+                .orElseThrow(() -> new CategoryEntityException(CategoryExceptionMessage.CATEGORY_NOT_FOUND));
         return new CategoryDto(category);
     }
 
@@ -53,8 +53,19 @@ public class CategoryService {
     //있어야 하는지 잘 모르겠음
     public NSupplementRegisterDto getProduct(Long productId) {
         NSupplement product = nSupplementRepository.findById(productId)
-                .orElseThrow(() -> new ProductEntityException(ExceptionMessage.PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new ProductEntityException(CategoryExceptionMessage.PRODUCT_NOT_FOUND));
 
         return new NSupplementRegisterDto(product);
+    }
+
+
+    /**
+     * 부모 카테고리 ID를 기준으로 자식 카테고리 목록 조회
+     */
+    public List<CategoryDto> getChildrenCategories(Long parentId) {
+        List<Category> children = categoryRepository.findChildrenById(parentId);
+        return children.stream()
+                .map(CategoryDto::new)
+                .collect(Collectors.toList());
     }
 }

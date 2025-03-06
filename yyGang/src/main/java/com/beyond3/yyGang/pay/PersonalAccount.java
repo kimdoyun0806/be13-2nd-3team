@@ -33,10 +33,10 @@ public class PersonalAccount {
         this.user = user;
     }
 
-    public void setBalance(int paidAmount){
+    public void decreaseBalance(int paidAmount){
         this.balance = balance - paidAmount;
     }
-
-
-
+    public void increaseBalance(int paidAmount){
+        this.balance = balance + paidAmount;
+    }
 }

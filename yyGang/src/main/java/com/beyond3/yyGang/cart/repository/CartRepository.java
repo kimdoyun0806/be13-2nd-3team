@@ -24,4 +24,6 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
 
     @Query("select c from Cart c join fetch c.cartOptions co join fetch co.nSupplement ns where c.user.email = :userEmail")
     Optional<Cart> findByUserEmailWithCartOptions(@Param("userEmail") String email);
+
+
 }

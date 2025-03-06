@@ -6,8 +6,8 @@ import com.beyond3.yyGang.cart.dto.CartResponseDto;
 import com.beyond3.yyGang.cart.repository.CartOptionRepository;
 import com.beyond3.yyGang.cart.repository.CartRepository;
 import com.beyond3.yyGang.cart.service.CartService;
-import com.beyond3.yyGang.nsupplement.NSupplementRepository;
-import com.beyond3.yyGang.security.JwtTokenProvider;
+import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
+import com.beyond3.yyGang.auth.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -55,11 +55,11 @@ public class CartController {
     // 장바구니 삭제
     @DeleteMapping("/{cartOptionId}")
     @Operation(summary = "장바구니 영양제 삭제", description = "사용자 장바구니에 있는 영양제를 삭제한다.")
-    public ResponseEntity<Long> deleteCartOption(@PathVariable Long cartOptionId
+    public ResponseEntity<String> deleteCartOption(@PathVariable Long cartOptionId
             /*,@RequestHeader("Authorization") String token*/) {
 
         cartService.deleteCartOption(cartOptionId);
-        return ResponseEntity.ok(cartOptionId);
+        return ResponseEntity.ok("상품이 삭제 되었습니다.");
     }
 
     // 장바구니 상품 수량,가격 변경

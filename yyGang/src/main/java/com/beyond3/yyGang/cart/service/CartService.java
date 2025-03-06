@@ -7,26 +7,19 @@ import com.beyond3.yyGang.cart.dto.CartOptionDto;
 import com.beyond3.yyGang.cart.dto.CartResponseDto;
 import com.beyond3.yyGang.cart.repository.CartOptionRepository;
 import com.beyond3.yyGang.cart.repository.CartRepository;
-import com.beyond3.yyGang.exception.message.CartCountException;
-import com.beyond3.yyGang.exception.message.CartEntityException;
-import com.beyond3.yyGang.exception.message.ExceptionMessage;
-import com.beyond3.yyGang.exception.message.StockQuantityException;
+import com.beyond3.yyGang.handler.exception.CartException;
+import com.beyond3.yyGang.handler.exception.UserException;
+import com.beyond3.yyGang.handler.message.*;
 import com.beyond3.yyGang.nsupplement.NSupplement;
-import com.beyond3.yyGang.nsupplement.NSupplementRepository;
-import com.beyond3.yyGang.security.JwtTokenProvider;
+import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
 import com.beyond3.yyGang.user.domain.User;
 import com.beyond3.yyGang.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
@@ -40,13 +33,19 @@ public class CartService {
 
     @Transactional
     public CartResponseDto addCartOption(String userEmail, AddCartOptionRequestDto addCartOptionRequestDto) {
-        User findUser = userRepository.findByEmail(userEmail).orElseThrow(() -> new EntityNotFoundException("User not found for userId"));
-        NSupplement findNSupplement = nSupplementRepository.findById(addCartOptionRequestDto.getNSupplementId()).orElseThrow(() -> new EntityNotFoundException("NSupplement not found for nSupplementId"));
-        Cart findCart = cartRepository.findByUserEmail(userEmail).orElseThrow(() -> new CartEntityException(ExceptionMessage.CART_NOT_FOUND));
+
+        NSupplement findNSupplement = nSupplementRepository.findById(addCartOptionRequestDto.getNSupplementId()).orElseThrow(() -> new CartException(CartExceptionMessage.PRODUCT_NOT_FOUND));
+        Cart findCart = cartRepository.findByUserEmail(userEmail).orElseThrow(() -> new CartException(CartExceptionMessage.CART_NOT_FOUND));
 
         // 재고 확인
         if (findNSupplement.getStockQuantity() < addCartOptionRequestDto.getQuantity()) {
-            throw new StockQuantityException(ExceptionMessage.STOCK_QUANTITY_NOT_ENOUGH);
+            throw new CartException(CartExceptionMessage.STOCK_QUANTITY_NOT_ENOUGH);
+        }
+
+        // 상품 중복 확인
+        boolean isAlreadyInCart = cartOptionRepository.existsByCartAndNSupplement(findCart, findNSupplement);
+        if (isAlreadyInCart) {
+            throw new CartException(CartExceptionMessage.SUPPLEMENT_ALREADY_EXISTS);
         }
 
         // 카트 옵션 생성
@@ -64,8 +63,7 @@ public class CartService {
 
     @Transactional
     public void deleteCartOption(Long cartOptionId/*, Long userId*/) {
-        CartOption findCartOption = cartOptionRepository.findById(cartOptionId).orElseThrow(() -> new EntityNotFoundException("CartOption not found for CartOptionId"));
-
+        CartOption findCartOption = cartOptionRepository.findById(cartOptionId).orElseThrow(() -> new CartException(CartExceptionMessage.CART_OPTION_PRODUCT_NOT_FOUND));
         cartOptionRepository.delete(findCartOption);
     }
 
@@ -73,29 +71,27 @@ public class CartService {
     // 장바구니 상품 수량, 가격 업데이트
     public CartOptionDto updateCartProduct(Long cartOptionId, int count) {
         CartOption cartOption = cartOptionRepository.findById(cartOptionId)
-                .orElseThrow(() -> new CartEntityException(ExceptionMessage.CART_OPTION_NOT_FOUND));
+                .orElseThrow(() -> new CartException(CartExceptionMessage.CART_NOT_FOUND));
         NSupplement nSupplement = cartOption.getNSupplement();
 
         // 재고 확인
         if (nSupplement.getStockQuantity() < count) {
-            throw new StockQuantityException(ExceptionMessage.STOCK_QUANTITY_NOT_ENOUGH);
+            throw new CartException(CartExceptionMessage.STOCK_QUANTITY_NOT_ENOUGH);
         }
 
         // 수량 확인
         if (count < 1) {
-            throw new CartCountException(ExceptionMessage.CART_COUNT_MIN_VIOLATION);
+            throw new CartException(CartExceptionMessage.CART_COUNT_MIN_VIOLATION);
         }
 
         cartOption.updateSupplement(count);
         return CartOptionDto.fromCartOption(cartOption);
     }
 
-
     public CartResponseDto getCart(String userEmail) {
-        User findUser = userRepository.findByEmail(userEmail).orElseThrow(() -> new EntityNotFoundException("User not found for userEmail"));
 
         // 카트에 있는 카트옵션들을 가져올거라 패치조인 적용
-        Cart findCart = cartRepository.findByUserEmailWithCartOptions(userEmail).orElseThrow(() -> new CartEntityException(ExceptionMessage.CART_NOT_FOUND));
+        Cart findCart = cartRepository.findByUserEmailWithCartOptions(userEmail).orElseThrow(() -> new CartException(CartExceptionMessage.CART_NOT_FOUND));
 
         List<CartOption> cartOptions = findCart.getCartOptions();
 

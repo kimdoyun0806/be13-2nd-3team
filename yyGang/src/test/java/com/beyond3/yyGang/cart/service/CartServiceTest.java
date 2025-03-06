@@ -1,24 +1,13 @@
 package com.beyond3.yyGang.cart.service;
 
-import com.beyond3.yyGang.cart.domain.CartOption;
-import com.beyond3.yyGang.cart.dto.CartOptionDto;
 import com.beyond3.yyGang.cart.repository.CartOptionRepository;
-import com.beyond3.yyGang.nsupplement.NSupplementRepository;
-import com.beyond3.yyGang.user.domain.Gender;
-import com.beyond3.yyGang.user.domain.Role_name;
-import com.beyond3.yyGang.user.domain.User;
+import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
 import com.beyond3.yyGang.user.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional

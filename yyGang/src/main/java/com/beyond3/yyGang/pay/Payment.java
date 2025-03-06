@@ -56,5 +56,4 @@ public class Payment {
     public void setStatus(PayStatus status) {
         this.payStatus = status;
     }
-
 }
