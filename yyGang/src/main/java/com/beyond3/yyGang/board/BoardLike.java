@@ -1,7 +1,5 @@
 package com.beyond3.yyGang.board;
 
-import com.beyond3.yyGang.answer.Answer;
-import com.beyond3.yyGang.answer.AnswerLikedId;
 import com.beyond3.yyGang.user.domain.User;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -14,7 +12,7 @@ import lombok.Getter;
 
 @Entity
 @Getter
-@Table(name = "answer_like")
+@Table(name = "board_like")
 public class BoardLike {
 
     @EmbeddedId

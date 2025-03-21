@@ -12,7 +12,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface NSupplementRepository extends JpaRepository<NSupplement, Long> {
 
     // 상품 id로 검색
@@ -20,17 +19,9 @@ public interface NSupplementRepository extends JpaRepository<NSupplement, Long> 
 
     List<NSupplement> findBySeller(User seller);
 
+    List<NSupplement> findByProductName(String productName);
+
     // 상품 이름으로 나열하기-?
     @Query("SELECT n FROM NSupplement n ORDER BY n.productName DESC")
     List<NSupplement> findAllDesc();
-
-    @Query("""
-        select distinct n
-        from NSupplement n
-        join ProductCategory pc on n = pc.nSupplement
-        where pc.category.id = :categoryId
-        """)
-    Page<NSupplement> findByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
-
-
 }

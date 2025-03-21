@@ -1,5 +1,6 @@
 package com.beyond3.yyGang.order.domain;
 
+import com.beyond3.yyGang.EntityDate;
 import com.beyond3.yyGang.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -11,10 +12,11 @@ import java.util.List;
 
 @Entity
 @Getter
+@Setter
 @Table(name = "`order`")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Order {
+public class Order extends EntityDate {
     //주문
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,20 +31,14 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
 
-    @CreationTimestamp
-    @Column(name = "order_date", columnDefinition = "TIMESTAMP")
-    private LocalDateTime orderDate;
+    @OneToMany(mappedBy = "orderId", cascade = CascadeType.ALL)
+    private List<OrderOption> orderOptions;
 
-//    @OneToMany(mappedBy = "order")
-//    private List<OrderOption> orderOptions;
+    private int totalOrderPrice;
 
     @Builder
     private Order(User user, OrderStatus orderStatus) {
         this.user = user;
-        this.orderStatus = orderStatus;
-    }
-
-    public void setOrderStatus(OrderStatus orderStatus) {
         this.orderStatus = orderStatus;
     }
 
@@ -54,7 +50,6 @@ public class Order {
                 .orderStatus(OrderStatus.PENDING) // 기본적으로 PENDING 상태로 설정
                 .build();
     }
-
 
     //    @OneToOne(mappedBy = "order", fetch = FetchType.LAZY)
 //    private Payment payment;

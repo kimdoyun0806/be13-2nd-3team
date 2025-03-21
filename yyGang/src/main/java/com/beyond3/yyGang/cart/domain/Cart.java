@@ -10,10 +10,11 @@ import java.util.List;
 @Entity
 @Getter
 @Table(name = "cart")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Cart {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cart_id")
     private Long cartId;
 
@@ -21,23 +22,17 @@ public class Cart {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "cart", fetch = FetchType.LAZY) // 나중에 cascade 고려
-    private List<CartOption> cartOptions = new ArrayList<>();
+    // CascadeType = Cart 에 대한 수정 삭제 -> CartOption에도 적용된다는 의미
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL)
+    private List<CartOption> cartOptions;
 
-    protected Cart() {
-    }
-
+    @Builder
     private Cart(User user) {
         this.user = user;
-    }
-
-    void addCartOption(CartOption cartOption) {
-        this.cartOptions.add(cartOption);
     }
 
     // 장바구니는 회원가입했을 때 생성되어야 할 듯
     public static Cart createCart(User user) {
         return new Cart(user);
     }
-
 }

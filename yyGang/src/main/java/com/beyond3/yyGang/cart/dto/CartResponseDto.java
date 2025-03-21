@@ -14,13 +14,14 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CartResponseDto {
+
     private Long cartId;
 
     private List<CartOptionDto> cartOptions;
 
-    public static CartResponseDto fromCart(Cart cart, List<CartOptionDto> cartOptions) {
+    public static CartResponseDto fromCart(Long cartId, List<CartOptionDto> cartOptions) {
         return CartResponseDto.builder()
-                .cartId(cart.getCartId())
+                .cartId(cartId)
                 .cartOptions(cartOptions)
                 .build();
     }

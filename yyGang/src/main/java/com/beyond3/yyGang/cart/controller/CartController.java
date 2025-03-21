@@ -9,6 +9,7 @@ import com.beyond3.yyGang.cart.service.CartService;
 import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
 import com.beyond3.yyGang.auth.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,72 +17,72 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @Slf4j
 @RestController
 @RequestMapping("/cart")
 @RequiredArgsConstructor
+@Tag(name = "Cart", description = "장바구니 관련 기능")
+@CrossOrigin(origins="http://localhost:8080")
 public class CartController {
 
     private final CartService cartService;
-    private final CartRepository cartRepository;
-    private final CartOptionRepository cartOptionRepository;
-    private final NSupplementRepository nSupplementRepository;
-    private final JwtTokenProvider jwtTokenProvider;
 
-    // 로그인한 사용자의 장바구니 조회
+
+    // 로그인한 사용자의 장바구니 조회 -> 페이징으로 처리하는게 낫겠지?
     @GetMapping
     @Operation(summary = "장바구니 목록 조회", description = "사용자 장바구니의 영양제 목록을 조회한다.")
-    public ResponseEntity<CartResponseDto> getUserCart(@RequestHeader("Authorization") String token) {
-        String userEmail = getUserEmailFromToken(token);
+    public ResponseEntity<CartResponseDto> getUserCart(
+            Principal principal,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
 
-        CartResponseDto cartResponseDto = cartService.getCart(userEmail);
+        String userEmail = principal.getName();
+        CartResponseDto cartResponseDto = cartService.getCart(userEmail, page, size);
 
         return ResponseEntity.ok(cartResponseDto);
     }
 
+
     @PostMapping("/nsupplement")
     @Operation(summary = "장바구니 영양제 추가", description = "사용자 장바구니에 영양제를 추가한다.")
     public ResponseEntity<CartResponseDto> addCartOption(
-            @RequestHeader("Authorization") String token,
+            Principal principal,
             @Valid @RequestBody AddCartOptionRequestDto addCartOptionRequestDto
     ) {
-        String userEmail = getUserEmailFromToken(token);
+        String userEmail = principal.getName();
 
         CartResponseDto cartResponseDto = cartService.addCartOption(userEmail, addCartOptionRequestDto);
 
         return ResponseEntity.ok(cartResponseDto);
     }
 
-    // 장바구니 삭제
-    @DeleteMapping("/{cartOptionId}")
-    @Operation(summary = "장바구니 영양제 삭제", description = "사용자 장바구니에 있는 영양제를 삭제한다.")
-    public ResponseEntity<String> deleteCartOption(@PathVariable Long cartOptionId
-            /*,@RequestHeader("Authorization") String token*/) {
 
-        cartService.deleteCartOption(cartOptionId);
-        return ResponseEntity.ok("상품이 삭제 되었습니다.");
+    // 장바구니에서 특정 영양제 삭제
+    @DeleteMapping("/{cartOptionId}")
+    @Operation(summary = "장바구니 영양제 삭제", description = "사용자 장바구니에 있는 특정 영양제를 삭제한다.")
+    public ResponseEntity<String> deleteCartOption(
+            Principal principal,
+            @PathVariable("cartOptionId") Long cartOptionId
+    ) {
+        String email = principal.getName();
+        cartService.deleteCartOption(cartOptionId, email);
+        return ResponseEntity.ok("상품이 삭제되었습니다.");
     }
+
 
     // 장바구니 상품 수량,가격 변경
     @PutMapping("/{cartOptionId}")
-    @Operation(summary = "장바구니 영양제 수량 변경", description = "사용자 장바구니의 영양제 수량을 변경한다.")
-    public ResponseEntity<CartOptionDto> updateCartOptionQuantity(@PathVariable Long cartOptionId,
-                                                                  @RequestParam int quantity
-            /*,@RequestHeader("Authorization") String token*/) {
+    @Operation(summary = "장바구니 영양제 수량 변경", description = "사용자 장바구니의 특정 영양제 수량을 변경한다.")
+    public ResponseEntity<CartOptionDto> updateCartOptionQuantity(
+            @PathVariable("cartOptionId") Long cartOptionId,
+            @RequestParam("quantity") int quantity, // 수량 변경, 최소 1개
+            Principal principal) {
 
-        // 수량, 가격 업데이트
-        CartOptionDto cartOptionDto = cartService.updateCartProduct(cartOptionId, quantity);
+        String userEmail = principal.getName();
+        CartOptionDto cartOptionDto = cartService.updateCartProduct(cartOptionId, quantity, userEmail);
         return ResponseEntity.ok(cartOptionDto);
     }
 
-
-    private String getUserEmailFromToken(String token) {
-        String trimToken = token.substring(7).trim();
-
-        if (!jwtTokenProvider.validateToken(trimToken)) {
-            // 토큰이 유효하지 않은 경우
-            throw new UsernameNotFoundException("유효하지 않은 토큰입니다.");
-        }
-        return jwtTokenProvider.getAuthentication(trimToken).getName();
-    }
 }

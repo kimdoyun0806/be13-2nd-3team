@@ -1,20 +1,16 @@
 package com.beyond3.yyGang.user.domain;
 
 import com.beyond3.yyGang.handler.exception.UserException;
-import com.beyond3.yyGang.handler.message.UserExceptionMessage;
-import com.beyond3.yyGang.review.Review;
-import com.beyond3.yyGang.user.dto.UserInfoDto;
+import com.beyond3.yyGang.handler.message.ExceptionMessage;
+import com.beyond3.yyGang.review.domain.Review;
 import com.beyond3.yyGang.user.dto.UserModifyDto;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -47,8 +43,9 @@ public class User implements UserDetails {
 
     // 이메일은 중복되어선 안됨, 값이 필수로 있어야 함
     @Column(nullable = false, unique = true)
-    @Pattern(regexp="^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])+[.][a-zA-Z]{2,3}$", message="이메일 주소 양식을 확인해주세요")
+    @Pattern(regexp="^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z]){4,29}@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])+[.][a-zA-Z]{2,3}$", message="이메일 주소 양식을 확인해주세요")
     // -> 요청 데이터가 이메일 형식을 준수하는지 검증하는데 활용
+    // @ 앞에는 5~30글자에 해당
     private String email;
 
     @Column(nullable = false)  // 필수
@@ -87,7 +84,8 @@ public class User implements UserDetails {
         Optional.ofNullable(dto.getRole()).ifPresent(
                 role -> {
                     if(role.equals(Role_name.ADMIN)) {
-                        throw new UserException(UserExceptionMessage.CANNOT_SELECT_ADMIN);
+                        // ADMIN으로는 변경할 수 없게. -> 어차피 프론트 단에서 선택하겠지만 그래도 혹시 몰라서
+                        throw new UserException(ExceptionMessage.CANNOT_SELECT_ADMIN);
                     }
                     this.role = role;
                 }
@@ -140,35 +138,5 @@ public class User implements UserDetails {
         return true;
     }
 
-    /*===================================================================*/
-
-    /*===================================================================*/
-//
-//    @OneToMany(mappedBy = "users")
-//    private List<QuestionBoard> questionBoards;
-//
-//    @OneToOne(mappedBy = "users")
-//    private PersonalHealth personalHealth;
-//
-//    @OneToMany(mappedBy = "users")
-//    private List<Order> orders;
-//
-//    @OneToMany(mappedBy = "users")
-//    private List<NQuestion> nQuestions;
-//
-//    @OneToMany(mappedBy = "users")
-//    private List<NAnswer> nAnswers;
-//
-//    @OneToMany(mappedBy = "users")
-//    private List<Answer> answers;
-//
-//    @OneToMany(mappedBy = "users")
-//    private List<Board> boards;
-//
-//    @OneToMany(mappedBy = "users")
-//    private List<AgeGroup.Comments> comments;
-//
-//    @OneToOne(mappedBy = "user")
-//    private Cart cart;
 
 }

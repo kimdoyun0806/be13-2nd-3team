@@ -7,9 +7,10 @@ import lombok.*;
 @Entity
 @Getter
 @Table(name = "cart_option")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CartOption {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "cart_option_id")
     private Long cartOptionID;
 
@@ -25,30 +26,27 @@ public class CartOption {
     @JoinColumn(name = "products_id")
     private NSupplement nSupplement;
 
-    protected CartOption() {
-    }
-
     private CartOption(Cart cart, NSupplement nSupplement, int quantity) {
         this.cart = cart;
         this.nSupplement = nSupplement;
         this.quantity = quantity;
         this.price = calculateCartOptionPrice();
-        this.cart.addCartOption(this);
+//        this.cart.addCartOption(this);
     }
 
     public static CartOption createCartOption(Cart cart, NSupplement nSupplement, int quantity) {
         return new CartOption(cart, nSupplement, quantity);
     }
 
-    // 장바구니옵션 상품 수량 * 가격
-    private int calculateCartOptionPrice() {
-        return this.nSupplement.getPrice() * this.quantity;
+    // 영양제 수량 변경
+    public void updateSupplement(int count) {
+        this.quantity = count;
+        this.price = calculateCartOptionPrice();
     }
 
-    // 장바구니 상품 수량,가격 변경
-    public void updateSupplement(int quantity) {
-        this.quantity = quantity;
-        this.price = calculateCartOptionPrice();
+    // 장바구니옵션 총 가격 계산
+    private int calculateCartOptionPrice() {
+        return this.getNSupplement().getPrice() * this.getQuantity();
     }
 
 }

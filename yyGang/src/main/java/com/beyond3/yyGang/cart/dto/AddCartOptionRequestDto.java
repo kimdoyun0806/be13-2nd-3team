@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AddCartOptionRequestDto {
 
-    //    @NotNull(message = "상품이 제대로 확인되지 않았습니다.")
+    // 상품 아이디는 선택한 순간 바로 입력되도록 프론트 엔드에서 설정 ->
     private Long nSupplementId;
 
-    // @NotNull(message = "개수를 정확히 입력하세요.")
+    // 개수 수정이 없는 경우 -> 기존 개수 그대로 유지되도록 하는 로직 필요
     private int quantity;
 
 }

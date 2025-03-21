@@ -1,12 +1,8 @@
 package com.beyond3.yyGang.nsupplement;
 
-import com.beyond3.yyGang.handler.exception.UserException;
-import com.beyond3.yyGang.handler.message.UserExceptionMessage;
 import com.beyond3.yyGang.nsupplement.dto.NSupplementModifyDto;
-import com.beyond3.yyGang.review.Review;
-import com.beyond3.yyGang.user.domain.Role_name;
+import com.beyond3.yyGang.review.domain.Review;
 import com.beyond3.yyGang.user.domain.User;
-import com.beyond3.yyGang.user.dto.UserModifyDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -21,8 +17,8 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,25 +48,27 @@ public class NSupplement {
 
     private int stockQuantity;
 
+    private int reviewCount;    // 전체 리뷰 수
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
     private User seller;
 
     @OneToMany(mappedBy = "nSupplement")
-    private List<Review> reviews;
+    private List<Review> reviews;       // 이거 왜 넣었더라
 
     public void updateNSupplement(NSupplementModifyDto dto) {
         // null이거나 값이 비어 있는 경우는 업데이트 안되게ㅇㅇ
 
-        if(dto.getProductName() != null && !dto.getProductName().trim().isEmpty()){
+        if(StringUtils.isNotBlank(dto.getProductName())){
             this.productName = dto.getProductName();
         }
 
-        if(dto.getCaution() != null && !dto.getCaution().trim().isEmpty()){
+        if(StringUtils.isNotBlank(dto.getCaution())){
             this.caution = dto.getCaution();
         }
 
-        if(dto.getBrand() != null && !dto.getBrand().trim().isEmpty()){
+        if(StringUtils.isNotBlank(dto.getBrand())){
             this.brand = dto.getBrand();
         }
 
