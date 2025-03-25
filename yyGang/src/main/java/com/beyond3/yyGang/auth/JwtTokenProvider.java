@@ -3,6 +3,7 @@ package com.beyond3.yyGang.auth;
 import com.beyond3.yyGang.handler.exception.UserException;
 import com.beyond3.yyGang.handler.message.ExceptionMessage;
 import com.beyond3.yyGang.user.domain.Role_name;
+import com.beyond3.yyGang.user.domain.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -28,10 +29,10 @@ import java.util.concurrent.TimeUnit;
 public class JwtTokenProvider {
 
     private final SecretKey key;  // JWT 서명에 사용될 비밀 키
-//    private final long ACCESS_TOKEN_EXP = 1000L * 60L * 60L; // 만료까지 15분
-//    private final long REFRESH_TOKEN_EXP = 1000L * 60L * 60L * 15L;    // refresh 토큰 만료 기간
-    private final long ACCESS_TOKEN_EXP = 1000L * 60L; // 만료까지 15분
-    private final long REFRESH_TOKEN_EXP = 1000L * 60L * 5; ;    // refresh 토큰 만료 기간
+    private final long ACCESS_TOKEN_EXP = 1000L * 60L * 60L; // 만료까지 15분
+    private final long REFRESH_TOKEN_EXP = 1000L * 60L * 60L * 15L;    // refresh 토큰 만료 기간
+//    private final long ACCESS_TOKEN_EXP = 1000L * 60L; // 만료까지 15분
+//    private final long REFRESH_TOKEN_EXP = 1000L * 60L * 5; ;    // refresh 토큰 만료 기간
 
     private final UserDetailsService userDetailsService;
     private final RedisTemplate<String, String> redisTemplate;
