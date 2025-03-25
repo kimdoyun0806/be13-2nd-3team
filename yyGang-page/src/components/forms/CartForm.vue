@@ -1,45 +1,47 @@
 <template>
     <div class="cart-wrapper py-4">
-    <!-- 전체 선택 & 삭제 -->
+    <!-- 선택 & 삭제 -->
     <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
         <div>
         <input type="checkbox" v-model="allSelected" @change="toggleAll" /> 전체 선택
         </div>
-        <button class="btn btn-sm btn-outline-secondary">선택 삭제</button>
+        <button class="btn btn-sm btn-outline-danger" @click="deleteSelected">선택 삭제</button>
     </div>
 
-    <!-- 브랜드별 묶음 -->
-    <div v-for="(store, index) in groupedCart" :key="index" class="mb-4 p-3 border rounded">
-        <!-- 브랜드명 + 쿠폰받기 -->
-        <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">
-            <input type="checkbox" v-model="store.checked" @change="toggleStore(store.name)" class="me-2" />
-            {{ store.name }}
-        </h5>
+    <!-- 상품 목록 -->
+    <div v-for="item in cartItems" :key="item.cartOptionId" class="mb-4 p-3 border rounded">
+        <div class = "col-md-1">
+            <input type ="checkbox" v-model="item.checked"/>
         </div>
-
-        <!-- 상품 목록 -->
-        <div v-for="(item, i) in store.items" :key="i" class="row mb-3 border-bottom pb-3">
-        <div class="col-md-1">
-            <input type="checkbox" v-model="item.checked" />
-        </div>
+        <div class="row mb-3 border-bottom pb-3 align-items-center">
         <div class="col-md-2">
-            <img :src="item.image" class="img-fluid rounded" />
+            <img :src="item.image || defaultImage" class="img-fluid rounded" />
         </div>
         <div class="col-md-5">
-            <p class="fw-bold mb-1">{{ item.name }}</p>
-            <p class="text-muted mb-1">{{ item.option }}</p>
-            <del class="text-muted">{{ formatPrice(item.originalPrice) }}</del>
-            <span class="text-danger ms-2">{{ formatPrice(item.price) }}</span>
+            <p
+            class="fw-bold mb-1 text-primary"
+            style="cursor: pointer;"
+            @click="$emit('item-click', item.nSupplementId)">
+            {{ item.nsupplementName }}
+            </p>
+            <p class="mb-0 text-muted">{{ item.brand }}</p>
+            <span class="text-danger">{{ formatPrice(item.itemPrice) }}</span>
         </div>
         <div class="col-md-2 text-end">
-            <p>상품 주문 수량: {{ item.quantity }}개</p>
-            <button class="btn btn-sm btn-outline-secondary">주문수정</button>
+            <label for="qty">수량</label>
+            <input
+            type="number"
+            v-model.number="item.quantity"
+            @change="changeQuantity(item.cartOptionId, item.quantity)"
+            class="form-control form-control-sm"
+            style="width: 70px; display: inline-block;"
+            min="1"
+            />
         </div>
         <div class="col-md-2 text-end">
-            <p class="fw-bold">상품금액<br />{{ formatPrice(item.price * item.quantity) }}</p>
-            <p class="text-muted small">배송비 {{ item.shippingFee ? formatPrice(item.shippingFee) : '무료' }}</p>
-            <button class="btn btn-outline-success btn-sm mt-2">주문하기</button>
+            <p class="fw-bold">총 금액<br />{{ formatPrice(item.itemPrice * item.quantity) }}</p>
+            <p class="small">배송비 {{ item.shippingFee ? formatPrice(item.shippingFee) : '무료' }}</p>
+            <button class="btn btn-outline-danger btn-sm mt-2" @click="$emit('delete-item', item.cartOptionId)">삭제</button>
         </div>
         </div>
     </div>
@@ -48,9 +50,9 @@
     <div class="bg-light p-3 rounded d-flex justify-content-between align-items-center">
         <div>
         <span class="me-3">선택상품금액 <strong>{{ formatPrice(selectedTotal) }}</strong></span>
-        <span class="me-3">총 배송비 <strong>{{ formatPrice(totalShippingFee) }}</strong></span>
-        <span class="me-3">즉시할인예상금액 <strong class="text-danger">{{ formatPrice(0) }}</strong></span>
-        <span>주문금액 <strong class="text-success">{{ formatPrice(selectedTotal + totalShippingFee) }}</strong></span>
+        <span class="me-3">총 배송비 <strong>0원</strong></span>
+        <span class="me-3">즉시할인예상금액 <strong class="text-danger"> 0원 </strong></span>
+        <span>주문금액 <strong class="text-success">{{ formatPrice(selectedTotal) }}</strong></span>
         </div>
         <button class="btn btn-success">선택 상품 주문하기</button>
     </div>
@@ -58,90 +60,88 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue';
+import defaultImage from '@/assets/icon/SupplementCharactor.png';
 
+const props = defineProps({
+    cartOptions: Array
+});
 
+const emit = defineEmits(['update-quantity', 'delete-item']);
+const cartItems = ref([]);
 
-const cartItems = ref([
-    {
-    name: '아누아 라이소 효소 브라이트닝 클렌징 파우더 40g',
-    store: '아누아',
-    option: '2개',
-    quantity: 2,
-    price: 21600,
-    originalPrice: 27000,
-    image: 'https://via.placeholder.com/100x100',
-    shippingFee: 3000,
-    checked: true
+watch(
+    () => props.cartOptions,
+    (newVal) => {
+    if (Array.isArray(newVal)) {
+        cartItems.value = newVal.map(item => ({ ...item, checked: false }));
+    } else {
+        cartItems.value = [];
+    }
     },
-    {
-    name: '아누아 PDRN 피디알엔 히알루론산 캡슐 세럼 10개',
-    store: '아누아',
-    option: '3개',
-    quantity: 3,
-    price: 18000,
-    originalPrice: 22000,
-    image: 'https://via.placeholder.com/100x100',
-    shippingFee: 0,
-    checked: true
-    }
-])
-
-const groupedCart = computed(() => {
-    const groups = {}
-    cartItems.value.forEach((item) => {
-    if (!groups[item.store]) {
-        groups[item.store] = {
-        name: item.store,
-        items: [],
-        checked: false
-        }
-    }
-    groups[item.store].items.push(item)
-    })
-    return Object.values(groups)
-})
+    { immediate: true, deep: true }
+);
 
 const allSelected = computed({
-    get: () => cartItems.value.every((item) => item.checked),
+    get: () => cartItems.value.every(item => item.checked),
     set: (val) => {
-    cartItems.value.forEach((item) => {
-        item.checked = val
-    })
+    cartItems.value.forEach(item => (item.checked = val));
     }
-})
+});
 
 const selectedTotal = computed(() =>
     cartItems.value
-    .filter((item) => item.checked)
-    .reduce((sum, item) => sum + item.price * item.quantity, 0)
-)
+    .filter(item => item.checked)
+    .reduce((sum, item) => sum + (item.itemPrice || 0) * (item.quantity || 0), 0)
+);
 
-const totalShippingFee = computed(() =>
-    cartItems.value
-    .filter((item) => item.checked)
-    .reduce((sum, item) => sum + (item.shippingFee || 0), 0)
-)
 
-const formatPrice = (price) => price.toLocaleString() + '원'
+const formatPrice = price => price.toLocaleString() + '원';
 
 const toggleAll = () => {
-    const val = allSelected.value
-    cartItems.value.forEach((item) => (item.checked = val))
-}
+    const val = allSelected.value;
+    cartItems.value.forEach(item => (item.checked = val));
+};
 
-const toggleStore = (storeName) => {
-    const group = groupedCart.value.find((g) => g.name === storeName)
-    const isAllChecked = group.items.every((item) => item.checked)
-    group.items.forEach((item) => (item.checked = !isAllChecked))
-}
+const changeQuantity = (cartOptionId, newQty) => {
+    const quantity = parseInt(newQty);
+    if (quantity < 1) {
+    alert('최소 수량은 1개입니다.');
+    return;
+    }
+
+    const item = cartItems.value.find(item => item.cartOptionId === cartOptionId);
+    if (!item) return;
+
+    if (quantity > item.stockQuantity) {
+    alert(`재고는 ${item.stockQuantity}개까지 가능합니다.`);
+    item.quantity = item.stockQuantity; // 혹은 이전 값으로 되돌리기
+    return;
+    }
+    emit('update-quantity',cartOptionId, quantity);
+};
+
+const deleteSelected = () => {
+    const selectedIds = cartItems.value
+        .filter(item => item.checked)
+        .map(item => item.cartOptionId);
+
+    if (selectedIds.length === 0) {
+        alert('선택된 항목이 없습니다.');
+        return;
+    }
+    emit('delete-selected', selectedIds); 
+};
+
 </script>
 
 <style scoped>
-    .cart-wrapper {
+.cart-wrapper {
     max-width: 1000px;
-    margin-left: 300px; /* Sidebar 너비만큼 띄우기 */
-    padding-right: 1rem;
-    padding-left: 1rem;
-    }
+    margin: 0 auto;
+    padding: 1rem;
+}
+img {
+    max-width: 100%;
+}
 </style>

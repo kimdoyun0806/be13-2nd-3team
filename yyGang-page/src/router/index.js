@@ -18,7 +18,7 @@ const MainView = () => import('../views/MainView.vue');
 const MyPage = () => import('@/views/User/MyPage.vue');
 const MyPageInfo = () => import('@/views/User/MyPageInfo.vue');
 const Cart = () => import('@/views/Cart.vue');
-
+const NSupplementDetail = () => import('@/views/NSupplementDeatil.vue');
 
 // createRouter : Vue Router 설정 함수 
 const router = createRouter({
@@ -99,6 +99,12 @@ const router = createRouter({
           component: Join 
         }
       ]
+    },
+    {
+      path: '/nsupplement/:no',
+      name: 'nsupplement/no',
+      component: NSupplementDetail
+
     },
     
     // 404 라우트 -> 존재하지 않는 페이지 접근 시 NotFound 페이지 표시
