@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "ingredient_category")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class IngredientCategory {
+public class  IngredientCategory {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "i_category_id")

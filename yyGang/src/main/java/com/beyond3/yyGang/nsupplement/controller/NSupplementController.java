@@ -1,7 +1,9 @@
 package com.beyond3.yyGang.nsupplement.controller;
 
-import com.beyond3.yyGang.nsupplement.dto.NSupplementModifyDto;
-import com.beyond3.yyGang.nsupplement.dto.NSupplementRegisterDto;
+import com.beyond3.yyGang.nsupplement.NSupplement;
+import com.beyond3.yyGang.nsupplement.dto.*;
+import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
+import com.beyond3.yyGang.nsupplement.repository.SortType;
 import com.beyond3.yyGang.nsupplement.service.NSupplementService;
 import com.beyond3.yyGang.review.dto.ReviewRequestDto;
 import com.beyond3.yyGang.review.dto.ReviewResponseDto;
@@ -10,6 +12,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +32,7 @@ public class NSupplementController {
 
     private final NSupplementService nSupplementService;
     private final ReviewService reviewService;
+    private final NSupplementRepository nSupplementRepository;
 
     @PostMapping
     @Operation(summary = "상품 등록", description = "SELLER 만 상품 등록이 가능하다.")
@@ -63,6 +69,8 @@ public class NSupplementController {
 
         return ResponseEntity.ok("상품 삭제가 완료되었습니다.");
     }
+
+
 
     @PostMapping("/{nSupplementId}")
     @Operation(summary = "상품 수정", description = "해당 상품을 등록한 판매자만 수정 가능")
@@ -134,6 +142,30 @@ public class NSupplementController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(reviewResponseDto);
+    }
+
+    @GetMapping("/info/search")
+    public ResponseEntity<PageResponseDto<NSupplementResponseDtoV2>> infoSearch(
+            @RequestParam(required = false) String productName,
+            @RequestParam(required = false) String sortType,
+            @RequestParam(required = false) List<Long> healthIds,
+            @RequestParam(required = false) List<Long> ingredientIds,
+            // DB 컬럼명이 아니라 엔티티 필드명을 기준으로 정렬, 일단 기본 정렬은 SortType.requestSortType 메소드에 설정함
+            // size = -1 or page = -1 처럼 음수가 들어오는 상황 예외처리 할지, 너무 큰 값이 들어오면 max값 제한할지
+            @PageableDefault(size = 10, page = 0) Pageable pageable) {
+
+        NSupplementSearchRequestDtoV2 nSupplementSearchRequestDtoV2 = new NSupplementSearchRequestDtoV2(productName, healthIds, ingredientIds, sortType);
+        PageResponseDto<NSupplementResponseDtoV2> page = nSupplementRepository.searchPageV2(nSupplementSearchRequestDtoV2, pageable, SortType.requestSortType(nSupplementSearchRequestDtoV2.getSortType()));
+        return ResponseEntity.ok(page);
+    }
+
+    @GetMapping("/{nSupplementId}")
+    public ResponseEntity<NSupplementDetailResponseDto> detail(@PathVariable Long nSupplementId) {
+        NSupplement nSupplement = nSupplementRepository.findByproductId(nSupplementId).orElseThrow(() -> new RuntimeException("nSupplement not found"));
+
+        NSupplementDetailResponseDto nSupplementDetailResponseDto = new NSupplementDetailResponseDto(nSupplement.getProductId(), nSupplement.getProductName(), nSupplement.getCaution(), nSupplement.getBrand(), nSupplement.getPrice(), nSupplement.getReviewCount());
+
+        return ResponseEntity.ok(nSupplementDetailResponseDto);
     }
 
 }

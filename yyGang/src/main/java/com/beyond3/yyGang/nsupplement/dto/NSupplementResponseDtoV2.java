@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class NSupplementResponseDto {
+public class NSupplementResponseDtoV2 {
 
     private Long productId;
 
@@ -26,9 +26,9 @@ public class NSupplementResponseDto {
 
     private int reviewCount;    // 전체 리뷰 수
 
-    private List<String> ingredients = new ArrayList<>();
+    private List<IngredientName> ingredients = new ArrayList<>();
 
-    private List<String> healthNames = new ArrayList<>();
+    private List<HFunctionName> healthNames = new ArrayList<>();
 
     public NSupplementResponseDtoV2(Long productId, String productName, String caution, String brand, int price) {
         this.productId = productId;
