@@ -65,6 +65,34 @@ const itemClick = (no) => {
     router.push({name: 'nsupplement/no', params: {no}});
 };
 
+// const addCart = async (productId, quantity = 1) => {
+//     const requestData = {
+//     nSupplementId: Number(productId),
+//     quantity: Number(quantity)
+//     };
+//     console.log("보낼 JSON 데이터:", requestData);
+
+//     try {
+//         await apiClient.post('/cart/nsupplement', requestData, {
+//         headers: {
+//             'Content-Type': 'application/json'
+//             }
+//         });
+//         alert('장바구니에 추가되었습니다.');
+//         fetchCart(pageInfo.currentPage);
+//         } catch(error) {
+//             const code = error.response.data.code;
+//             const message = error.response.data.message;
+//             if(code === 404 || 409) {
+//                 alert(message);
+//             }
+//             else {
+//                 alert('에러가 발생했습니다.');
+//             }
+//         }
+//     }
+
+
 const deleteCart = async (cartOptionId) => {
     if (!confirm('정말로 삭제하시겠습니까?')) return;
 
@@ -131,6 +159,12 @@ onBeforeRouteUpdate((to, form) => {
 });
 
 onMounted(() => {
+    // const { add, productId, quantity } = currentRoute.query;
+    // if (add && productId) {
+    //     addCart(parseInt(productId), parseInt(quantity) || 1);
+    //     router.replace({ name: 'cart' });
+    // }
+    // console.log("currentRoute.query:", currentRoute.query);
     fetchCart(pageInfo.currentPage);
 });
 </script>
