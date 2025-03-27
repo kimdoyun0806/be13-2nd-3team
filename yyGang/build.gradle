@@ -50,6 +50,9 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: '5.11.4'
 
+	implementation 'org.glassfish.web:jakarta.servlet.jsp.jstl'
+	implementation "org.apache.tomcat.embed:tomcat-embed-jasper"
+
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	implementation group: 'org.springframework.boot', name: 'spring-boot-devtools', version: '3.4.2'
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.18.2'

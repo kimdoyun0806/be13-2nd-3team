@@ -15,6 +15,7 @@ import java.util.Optional;
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -23,6 +24,11 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("해당 사용자가 존재하지 않습니다.");
         }
 
-        return user.get();
+        User users = user.get();
+        return org.springframework.security.core.userdetails.User.builder()
+                .username(users.getEmail())
+                .password(users.getPassword())
+                .roles(users.getRole().toString())
+                .build();
     }
 }

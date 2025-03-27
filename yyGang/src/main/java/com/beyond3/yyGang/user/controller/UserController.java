@@ -27,148 +27,166 @@ import java.util.List;
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
-@Tag(name = "User", description = "회원 관리")
-@CrossOrigin(origins="http://localhost:8080")
 public class UserController {
 
     private final UserService userService;
-    private final PersonalAccountService personalAccountService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final AuthService authService;
+
+//    // 로그인 페이지 -> Get 방식으로 페이지 보기
+//    @GetMapping("/login")
+//    public ResponseEntity<String> yyLogin(){
+//        return "user/login";
+//    }
+//
+//    // 회원 가입 페이지 -> Get 방식으로 페이지 보기
+//    @GetMapping("/join")
+//    public String yyJoin(){
+//        return "user/join";
+//    }
 
     // 회원 가입 처리 -> Post 방식
     @PostMapping("/join")
-    @Operation(summary = "회원 가입", description = "가입 정보를 JSON으로 받아서 회원을 등록한다.")
-    // 회원 가입 완료되면 데이터 전송 없이 201 상태코드 + 메시지만 반환
+    //@RequestBody의 JSON 형식으로 데이터를 넘길 예정
     public ResponseEntity<String> join(@RequestBody @Valid UserJoinDTO userJoinDTO) {
 
-        userService.join(userJoinDTO);
+        log.info("userJoinDTO: {}", userJoinDTO);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body("회원가입이 완료되었습니다. 환영합니다!");
+        if (!userJoinDTO.passwordMathcing()) {
+            // 비밀번호, 비밀번호 확인이 일치하는지?
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("비밀번호가 일치하지 않습니다.");
+        }
+
+        User user = userJoinDTO.toEntity();
+        userService.join(user);
+
+        log.info("userJoinDTO : {} ", userRepository.findByEmail(user.getEmail()));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("회원 가입 성공");
     }
 
     // JWT 로그인
     @PostMapping("/login")
-    @Operation(summary = "로그인", description = "아이디와 패스워드를 JSON으로 받아서 로그인한다.")
-    public ResponseEntity<JwtToken> signIn(
-            @Valid @RequestBody UserLoginDto userLoginDto){
+    public ResponseEntity<JwtToken> signIn(@RequestBody UserLoginDto userLoginDto){
+        String userEmail = userLoginDto.getEmail();
+        String password = userLoginDto.getPassword();
 
-        JwtToken jwtToken = authService.signIn(userLoginDto.getEmail(), userLoginDto.getPassword());
+        log.info("userLoginDto: {}", userLoginDto);
+
+        User user = getUserFromEmail(userEmail);
+
+        // 비밀번호 매칭 확인
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new UsernameNotFoundException("잘못된 비밀번호 입니다.");
+        }
+
+        log.info("user: {}", user);
+
+        JwtToken jwtToken = userService.signIn(userEmail, password);
+
+        log.info("jwtToken: {}", jwtToken);
+
+        log.info("request username = {}, password = {}", userEmail, password);
+        log.info("jwtToken accessToken = {}, refreshToken = {}", jwtToken.getAccessToken(), jwtToken.getRefreshToken());
 
         return ResponseEntity.ok(jwtToken);
     }
 
-    @PostMapping("/logout")
-    @Operation(summary = "로그 아웃", description = "AccessToken 정보를 바탕으로 로그아웃 한다.")
-    public ResponseEntity<Void> logOut(
-            @RequestHeader("Authorization") String token){
-        authService.logout(token);
-
-        return ResponseEntity.noContent().build();
+    @PostMapping("/test")
+    public String test1(){
+        return "success";
     }
-
-    @PostMapping("/refresh")
-    @Operation(summary = "토큰 재발급", description = "AccessToken을 Refresh Token 정보를 바탕으로 재발급한다.")
-    public ResponseEntity<JwtToken> refresh(
-            @RequestHeader("Authorization") String token
-    ){
-        JwtToken refreshToken = authService.refresh(token);
-        return ResponseEntity.ok(refreshToken);
-    }
-
-//    @PostMapping("/test")
-//    public String test1() {
-//        return "success";
-//    }
 
     // 회원 정보 조회
-    @GetMapping("/my-page")
-    @Operation(summary = "회원 정보 조회 - 마이페이지", description = "인증이 완료된 회원의 정보를 조회한다.")
-    public ResponseEntity<UserInfoDto> userInfo(Principal principal) {
+    @GetMapping("/info")
+    public ResponseEntity<UserInfoDto> userInfo(@RequestHeader("Authorization") String token){
 
-        String email = principal.getName();
+        String userEmail = getUserEmailFromToken(token);
 
         // 토큰이 유효하다면 해당 토큰에서 사용자를 추출
-        User infoUser = userService.getUserByEmail(email);
-        UserInfoDto responseUserInfoDto = new UserInfoDto(infoUser);
+        User infoUser = getUserFromEmail(userEmail);
+        UserInfoDto responseUserInfoDto = infoUser.toUserInfoDto();
+        // UserInfoDto의 경우 password를 포함하고 있음 -> 이걸 프론트 단에서 처리할지, 아예 새롭게 Dto를 생성할지 고민
 
         return ResponseEntity.ok(responseUserInfoDto);
     }
 
     // 회원 탈퇴
-    @DeleteMapping("/my-page")
-    @Operation(summary = "회원 탈퇴", description = "인증이 완료된 회원의 정보를 삭제한다.")
-    public ResponseEntity<String> userDelete(Principal principal, @RequestBody DeleteDto deleteDto) {
+    @PostMapping("/info/delete")
+    public ResponseEntity<Void> userDelete(@RequestHeader("Authorization") String token){
 
-        String email = principal.getName();
-        String password = deleteDto.getPassword();
-        userService.delete(email, password);
+        String userEmail = getUserEmailFromToken(token);
+
+        // 토큰이 유효하다면 해당 토큰에서 사용자를 추출
+        User infoUser = getUserFromEmail(userEmail);
+        userService.delete(infoUser);
         // UserInfoDto의 경우 password를 포함하고 있음 -> 이걸 프론트 단에서 처리할지, 아예 새롭게 Dto를 생성할지 고민
+        log.info("user: {}", userRepository.findByEmail(infoUser.getEmail()));
 
-        return ResponseEntity.ok("탈퇴되었습니다.");
+        return ResponseEntity.ok().build();
     }
 
     // 회원 정보 수정
-    @PostMapping("/my-page")
-    @Operation(summary = "회원 정보 수정", description = "인증이 완료된 회원의 정보를 수정한다.")
-    public ResponseEntity<String> userModify(
-            Principal principal,
-            @RequestBody UserModifyDto userModifyDto){
+    @PatchMapping("/info/modify")
+    public ResponseEntity<Void> userModify(@RequestHeader("Authorization") String token, @RequestBody UserModifyDto userModifyDto){
 
-        String userEmail = principal.getName();
+        String userEmail = getUserEmailFromToken(token);
 
         // 토큰이 유효하다면 해당 토큰에서 사용자를 추출
-        userService.update(userEmail, userModifyDto);
+        User modifyUser = getUserFromEmail(userEmail);
+        userService.update(modifyUser, userModifyDto);
 
-        return ResponseEntity.ok("회원 정보 수정이 완료되었습니다.");
+        return ResponseEntity.ok().build();
     }
 
     // 비밀번호 수정
-    @PostMapping("/my-page/pass-word")
-    @Operation(summary = "비밀번호 수정", description = "인증이 완료된 회원의 비밀번호를 수정한다.")
-    public ResponseEntity<String> userModifyPassword(
-            Principal principal,
-            @RequestBody PasswordModifyDto passwordModifyDto){
+    @PatchMapping("/info/modify-password")
+    public ResponseEntity<Void> userModifyPassword(@RequestHeader("Authorization") String token, @RequestBody PasswordModifyDto passwordModifyDto){
 
-        String userEmail = principal.getName();
+        String userEmail = getUserEmailFromToken(token);
 
-        JwtToken jwtToken = userService.modifyPassword(userEmail, passwordModifyDto);
+        // 토큰이 유효하다면 해당 토큰에서 사용자를 추출
+        User passwordModifyUser = getUserFromEmail(userEmail);
 
-        // 비밀번호 수정 후에 -> 로그인 페이지로 이동하도록 -> 그러면 토큰 정보는 필요 없지 않나?
-        return ResponseEntity.ok("비밀번호가 변경되었습니다.");
+        log.info("oldPassword : {}", passwordModifyUser.getPassword());
+
+        if(!passwordEncoder.matches(passwordModifyDto.getOldPassword(), passwordModifyUser.getPassword())){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        passwordModifyUser.setPassword(passwordEncoder.encode(passwordModifyDto.getNewPassword()));
+        userRepository.save(passwordModifyUser);
+
+        log.info("newPassword : {}", userRepository.findByEmail(userEmail).get().getPassword());
+
+        // 새로운 토큰 등록
+        JwtToken jwtToken = userService.signIn(passwordModifyUser.getEmail(), passwordModifyDto.getNewPassword());
+        log.info("jwtToken: {}", jwtToken);
+
+        log.info("request username = {}, password = {}", passwordModifyUser.getEmail(), passwordModifyUser.getPassword());
+        log.info("jwtToken accessToken = {}, refreshToken = {}", jwtToken.getAccessToken(), jwtToken.getRefreshToken());
+
+
+        return ResponseEntity.ok().build();
     }
 
-//    // 회원 목록 조회
-//    @GetMapping("/admin/user-list")
-//    public ResponseEntity<List<UserInfoDto>> adminGetUserList(){
-//        return ResponseEntity.ok(userService.getAllUser());
-//    }
+    private String getUserEmailFromToken(String token){
+        String trimToken = token.substring(7).trim();
 
-    // 개인 계좌 등록
-    @PostMapping("/payment")
-    @Operation(summary = "회원 개인 계좌 개설", description = "회원 계좌 정보를 등록한다.")
-    public ResponseEntity<String> createAccount(
-            Principal principal,
-            @Valid @RequestBody PersonalAccountDto personalAccountDto
-    )
-    {
-        String userEmail = principal.getName();
-        personalAccountService.personalAccountRegister(userEmail, personalAccountDto);
-
-        return ResponseEntity.ok("계좌가 등록됐습니다.");
+        if(!jwtTokenProvider.validateToken(trimToken)){
+            // 토큰이 유효하지 않은 경우
+            throw new UsernameNotFoundException("유효하지 않은 토큰입니다.");
+        }
+        return jwtTokenProvider.getAuthentication(trimToken).getName();
     }
 
-    // 개인 계좌 삭제
-    @DeleteMapping("/payment")
-    @Operation(summary = "회원 개인 계좌 삭제", description = "회원 계좌를 삭제한다.")
-    public ResponseEntity<String> deleteAccount(Principal principal)
-    {
-        String userEmail = principal.getName();
-        personalAccountService.personalAccountDelete(userEmail);
-
-        return ResponseEntity.ok("계좌가 삭제되었습니다.");
+    private User getUserFromEmail(String userEmail){
+        Optional<User> optionalUser = userRepository.findByEmail(userEmail);
+        if(optionalUser.isEmpty()){
+            // 존재하지 않는 이메일이면?
+            throw new UsernameNotFoundException("사용자를 찾을 수 없습니다.");
+        }
+        return optionalUser.get();
     }
 }
