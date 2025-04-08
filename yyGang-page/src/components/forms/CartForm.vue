@@ -15,13 +15,13 @@
         </div>
         <div class="row mb-3 border-bottom pb-3 align-items-center">
         <div class="col-md-2">
-            <img :src="item.image || defaultImage" class="img-fluid rounded" />
+            <img :src="item.productImage || defaultImage" class="img-fluid rounded" />
         </div>
         <div class="col-md-5">
             <p
             class="fw-bold mb-1 text-primary"
             style="cursor: pointer;"
-            @click="$emit('item-click', item.nSupplementId)">
+            @click="$emit('item-click', item.nsupplementId)">
             {{ item.nsupplementName }}
             </p>
             <p class="mb-0 text-muted">{{ item.brand }}</p>
@@ -54,15 +54,21 @@
         <span class="me-3">즉시할인예상금액 <strong class="text-danger"> 0원 </strong></span>
         <span>주문금액 <strong class="text-success">{{ formatPrice(selectedTotal) }}</strong></span>
         </div>
-        <button class="btn btn-success">선택 상품 주문하기</button>
+        <button class="btn btn-success" @click="proceedToOrderForm">선택 상품 주문하기</button>
     </div>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
-import defaultImage from '@/assets/icon/SupplementCharactor.png';
+import { ref, computed, watch, defineProps } from 'vue';
+import { useRouter } from 'vue-router';
+import { useCartStore } from '@/stores/cartStores';
+import apiClient from '@/api';
 
+const cartStore = useCartStore();
+const router = useRouter();
+
+const defaultImage = 'https://yygang-bucket.s3.ap-northeast-2.amazonaws.com/SupplementCharactor.png';
 const props = defineProps({
     cartOptions: Array
 });
@@ -72,9 +78,17 @@ const cartItems = ref([]);
 
 watch(
     () => props.cartOptions,
-    (newVal) => {
+    async (newVal) => {
     if (Array.isArray(newVal)) {
+        console.log(newVal);
         cartItems.value = newVal.map(item => ({ ...item, checked: false }));
+        
+        for (let item of newVal) {
+                const responseImg = await apiClient.get(`/nsupplement/productImage/${item.nsupplementId}`);
+                // 각 이미지 데이터를 cartItems에 추가
+                item.productImage = responseImg.data;
+            }
+        console.log(newVal);
     } else {
         cartItems.value = [];
     }
@@ -114,9 +128,9 @@ const changeQuantity = (cartOptionId, newQty) => {
     if (!item) return;
 
     if (quantity > item.stockQuantity) {
-    alert(`재고는 ${item.stockQuantity}개까지 가능합니다.`);
-    item.quantity = item.stockQuantity; // 혹은 이전 값으로 되돌리기
-    return;
+        alert(`재고는 ${item.stockQuantity}개까지 가능합니다.`);
+        item.quantity = item.stockQuantity; // 혹은 이전 값으로 되돌리기
+        return;
     }
     emit('update-quantity',cartOptionId, quantity);
 };
@@ -131,6 +145,22 @@ const deleteSelected = () => {
         return;
     }
     emit('delete-selected', selectedIds); 
+};
+
+const proceedToOrderForm = () => {
+    const selectedItems = cartItems.value.filter(item => item.checked);
+    
+    if (selectedItems.length === 0) {
+        alert('선택된 항목이 없습니다.');
+        return;
+    }
+
+    console.log(selectedItems);
+    cartStore.setCartItems(selectedItems);
+    // OrderForm 페이지로 이동하며 장바구니 정보를 state로 전달
+        router.push({ 
+            name: 'cartOrder'
+        });
 };
 
 </script>

@@ -1,5 +1,7 @@
 package com.beyond3.yyGang.q_board.controller;
 
+
+import com.beyond3.yyGang.q_board.dto.QboardPageResponseDto;
 import com.beyond3.yyGang.q_board.dto.QboardRequestDto;
 import com.beyond3.yyGang.q_board.dto.QboardResponseDto;
 import com.beyond3.yyGang.q_board.dto.QboardUpdateDto;
@@ -8,7 +10,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +22,6 @@ import java.util.List;
 @RequestMapping("/qboard")
 @RequiredArgsConstructor
 @Tag(name="Qboard", description = "약 질문 게시판")
-@CrossOrigin(origins="http://localhost:8080")
-
 public class QuestionBoardController {
 
     private final QuestionBoardService questionBoardService;
@@ -45,12 +44,12 @@ public class QuestionBoardController {
     // 게시글 조회   -> 날짜 순으로 조회
     @GetMapping
     @Operation(summary = "전체 게시글 조회", description = "전체 게시글을 조회한다.")
-    public ResponseEntity<List<QboardResponseDto>> getAllQuestionBoard(
+    public ResponseEntity<QboardPageResponseDto> getAllQuestionBoard(
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size) {
 
-        Page<QboardResponseDto> qboardList = questionBoardService.getAllQboard(page,size);
-        return ResponseEntity.ok(qboardList.getContent());
+        QboardPageResponseDto allQboard = questionBoardService.getAllQboard(page, size);
+        return ResponseEntity.ok(allQboard);
     }
 
 

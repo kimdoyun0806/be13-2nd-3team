@@ -25,7 +25,7 @@ public interface QuestionBoardRepository extends JpaRepository<QuestionBoard, Lo
     // user가 작성한 qboardID의 qboard 글이 있는지?
     @Query("SELECT qb FROM QuestionBoard qb " +
             "WHERE qb.user = :user and qb.qboardId = :qboardId")
-    Optional<QuestionBoard> findByUserAndQboardId(@Param("user") User user, @Param("qboardId")Long qboardId);
+    Optional<QuestionBoard> findByUserAndQboardId(@Param("user")User user, @Param("qboardId")Long qboardId);
 
     // 조회수 증가 쿼리
     @Modifying  // delete, update, insert 쿼리문에 대해서는 modifying을 꼭 붙여줘야 한다.

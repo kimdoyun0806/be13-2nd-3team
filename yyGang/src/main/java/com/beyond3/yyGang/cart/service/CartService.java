@@ -10,12 +10,13 @@ import com.beyond3.yyGang.cart.repository.CartRepository;
 import com.beyond3.yyGang.handler.exception.CartEntityException;
 import com.beyond3.yyGang.handler.exception.OrderException;
 import com.beyond3.yyGang.handler.exception.UserException;
-import com.beyond3.yyGang.handler.message.*;
+import com.beyond3.yyGang.handler.message.ExceptionMessage;
 import com.beyond3.yyGang.nsupplement.NSupplement;
 import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
 import com.beyond3.yyGang.user.domain.User;
 import com.beyond3.yyGang.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -25,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -70,10 +72,9 @@ public class CartService {
 
         // 카트 옵션 DTO 생성
         CartOptionDto cartOptionDto = CartOptionDto.fromCartOption(saveCartOption);
-
         int totalCount = findCart.getCartOptions().size();
         // 카트 DTO 리턴
-        return CartResponseDto.fromCart(findCart.getCartId(), List.of(cartOptionDto),totalCount);
+        return CartResponseDto.fromCart(findCart.getCartId(), List.of(cartOptionDto), totalCount);
     }
 
     @Transactional
@@ -138,8 +139,8 @@ public class CartService {
 
         // 찾아온 Cart에서 CartOptions 추출 -> Dto로 변경해서 반환
         List<CartOptionDto> cartOptionDtoList = findCart.getContent().stream()
-                .map(CartOptionDto::fromCartOption)
-                .toList();
+                                                        .map(CartOptionDto::fromCartOption)
+                                                        .toList();
 
         return CartResponseDto.fromCart(byUserEmail.getCartId(), cartOptionDtoList, (int) findCart.getTotalElements());
     }

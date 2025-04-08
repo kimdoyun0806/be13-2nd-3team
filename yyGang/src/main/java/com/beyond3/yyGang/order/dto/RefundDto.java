@@ -1,6 +1,6 @@
 package com.beyond3.yyGang.order.dto;
 
-import com.beyond3.yyGang.order.domain.OrderStatus;
+import com.beyond3.yyGang.order.OrderStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

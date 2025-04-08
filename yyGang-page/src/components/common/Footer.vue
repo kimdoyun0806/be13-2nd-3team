@@ -25,7 +25,7 @@
                 </a>
             </li>
         </ul>
-        </footer>
+  </footer>
 </div>
 </template>
 

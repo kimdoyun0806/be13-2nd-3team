@@ -5,6 +5,7 @@ import lombok.Getter;
 
 import java.io.Serial;
 
+
 @Getter
 public class NSupplementException extends BaseException {
     @Serial

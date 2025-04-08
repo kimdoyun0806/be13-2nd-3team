@@ -21,7 +21,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/answer")
 @Tag(name = "Answer-Like", description = "답글에 대한 좋아요 기능")
-@CrossOrigin(origins="http://localhost:8080")
 public class AnswerLikeController {
 
     private final AnswerLikeService answerLikeService;

@@ -29,14 +29,4 @@ public class PageResponseDto<T> implements Serializable {
         this.isFirstPage = page.isFirst();
         this.isLastPage = page.isLast();
     }
-
-    public PageResponseDto(Page<T> page, List<T> content) {
-        this.content = content;
-        this.totalElements = page.getTotalElements();
-        this.totalPages = page.getTotalPages();
-        this.currentPage = page.getNumber();
-        this.pageSize = page.getSize();
-        this.isFirstPage = page.isFirst();
-        this.isLastPage = page.isLast();
-    }
 }

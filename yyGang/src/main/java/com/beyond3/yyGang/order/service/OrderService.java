@@ -2,18 +2,18 @@ package com.beyond3.yyGang.order.service;
 
 import com.beyond3.yyGang.cart.domain.Cart;
 import com.beyond3.yyGang.cart.domain.CartOption;
-import com.beyond3.yyGang.cart.dto.CartRequestDto;
 import com.beyond3.yyGang.cart.repository.CartOptionRepository;
 import com.beyond3.yyGang.cart.repository.CartRepository;
+import com.beyond3.yyGang.handler.exception.NSupplementException;
 import com.beyond3.yyGang.handler.exception.OrderException;
-import com.beyond3.yyGang.handler.exception.UserException;
 import com.beyond3.yyGang.handler.message.ExceptionMessage;
+import com.beyond3.yyGang.handler.exception.UserException;
 import com.beyond3.yyGang.nsupplement.NSupplement;
 import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
-import com.beyond3.yyGang.order.domain.OrderStatus;
+import com.beyond3.yyGang.order.Order;
+import com.beyond3.yyGang.order.OrderOption;
+import com.beyond3.yyGang.order.OrderStatus;
 import com.beyond3.yyGang.order.dto.OrderDto;
-import com.beyond3.yyGang.order.domain.Order;
-import com.beyond3.yyGang.order.domain.OrderOption;
 import com.beyond3.yyGang.order.dto.OrderOptionDto;
 import com.beyond3.yyGang.order.dto.OrderResultDto;
 import com.beyond3.yyGang.order.dto.RefundDto;
@@ -24,22 +24,19 @@ import com.beyond3.yyGang.pay.Payment;
 import com.beyond3.yyGang.pay.PersonalAccount;
 import com.beyond3.yyGang.pay.repository.PaymentRepository;
 import com.beyond3.yyGang.pay.repository.PersonalAccountRepository;
-import com.beyond3.yyGang.auth.JwtTokenProvider;
 import com.beyond3.yyGang.user.domain.User;
 import com.beyond3.yyGang.user.repository.UserRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+
 @Slf4j
 @Service
 @Transactional(readOnly = true)
@@ -148,16 +145,16 @@ public class OrderService {
         // 해당 사용자 있는지 확인
         User user = getUserByEmail(email);
 
-        // 사용자 email을 바탕으로 Cart 찾아오기
-//        Cart cart = cartRepository.findByUserId(user.getUserId())
+//        // 사용자 email을 바탕으로 cart 찾아오기 + cartOption들도 받아오기
+//        Cart cart = cartRepository.findByUserEmailWithCartOptions(user.getEmail())
 //                .orElseThrow(() -> new UserException(ExceptionMessage.CART_NOT_FOUND));
 
-        // 사용자 email을 바탕으로 cart 찾아오기 + cartOption들도 받아오기
-        Cart cart = cartRepository.findByUserEmailWithCartOptions(user.getEmail())
-                .orElseThrow(() -> new UserException(ExceptionMessage.CART_NOT_FOUND));
+        // 장바구니 있는지 먼저 확인하고,
+        Cart cart = cartRepository.findByUserEmail(user.getEmail())
+                .orElseThrow(() -> new UserException(ExceptionMessage.USER_NOT_FOUND));
 
         // 해당 카트 아이디에 상품이 있는지 확인
-        List<CartOption> cartOptions = cart.getCartOptions();
+        List<CartOption> cartOptions = cartOptionRepository.findByCartId(cart.getCartId());
         if(cartOptions.isEmpty()){
             // 카트가 비어있는 경우 예외 던지기?
             throw new OrderException(ExceptionMessage.NO_ITEMS_IN_CART);
@@ -201,7 +198,7 @@ public class OrderService {
 
     // 사용자의 전체 주문 내역을 확인한다.
     @Transactional
-    public List<OrderResultDto> getAllOrderResult(String email) {
+    public List<OrderOptionDto> getAllOrderResult(String email) {
 
         // 해당 사용자 있는지 확인
         User user = getUserByEmail(email);
@@ -209,18 +206,11 @@ public class OrderService {
         // 해당 사용자의 email을 바탕으로 order + orderOptions들을 가져옴
         List<Order> userOrders = orderRepository.findByUserEmailWithOrderOptions(email);
 
-        List<OrderResultDto> result = new ArrayList<>();
+        List<OrderOptionDto> result = new ArrayList<>();
 
         for (Order order : userOrders) {
-            OrderResultDto orderResultDto = OrderResultDto.builder()
-                    .orderId(order.getOrderID())
-                    .orderOptionDtoList(
-                            order.getOrderOptions().stream().map(OrderOptionDto::new).toList())
-                    .status(order.getOrderStatus())
-                    .totalPrice(order.getTotalOrderPrice())
-                    .orderDate(order.getCreatedAt())
-                    .build();
-            result.add(orderResultDto);
+            List<OrderOptionDto> orderOptionDto = order.getOrderOptions().stream().map(OrderOptionDto::new).toList();
+            result.addAll(orderOptionDto);
         }
 
         // 주문 결과 전송

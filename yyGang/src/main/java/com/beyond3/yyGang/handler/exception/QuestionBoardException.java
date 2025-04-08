@@ -4,6 +4,7 @@ import com.beyond3.yyGang.handler.message.ExceptionMessage;
 
 import java.io.Serial;
 
+
 public class QuestionBoardException extends BaseException {
 
     @Serial

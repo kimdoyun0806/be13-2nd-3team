@@ -1,13 +1,12 @@
 package com.beyond3.yyGang.nsupplement.dto;
 
 import com.beyond3.yyGang.hfunction.HFunctionName;
-import com.beyond3.yyGang.ingredient.IngredientName;
+import com.beyond3.yyGang.ingredient.domain.IngredientName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-
 
 @Data
 @NoArgsConstructor
@@ -23,6 +22,8 @@ public class NSupplementModifyDto {
     private int price;  // 상품 가격
 
     private int stockQuantity;  // 재고
+
+    private String productImage;
 
     private List<IngredientName> ingredients;   // 영양 성분
 

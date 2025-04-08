@@ -1,6 +1,6 @@
 <template>
     <div>
-        <NSupplementForm :nsupplement="nsupplement" @review-click="reviewClick"/>/>
+        <NSupplementForm :nsupplement="nsupplement" @review-click="reviewClick"/>
     </div>
 </template>
 
@@ -12,20 +12,21 @@
 
     const router = useRouter();
     const currentRoute = useRoute();
-    const nsupplement = reactive({});
-    // const productId = Number(currentRoute.params.productId);
+    const nsupplement = reactive([]);
+    const productId = Number(currentRoute.params.productId);
 
     const fetchNSupplement = async (productId) => {
         try {
             const response = await apiClient.get(
                 `/nsupplement/${productId}`
             );
+            console.log(response);
             const data = typeof response.data === 'string'
-    ? JSON.parse(response.data)
-    : response.data;
+        
+        ? JSON.parse(response.data)
+        : response.data;
 
-    Object.assign(nsupplement, data);
-    console.log('최종 nsupplement:', nsupplement);
+        Object.assign(nsupplement, data);
 
         } catch (error) {
             console.log(error);

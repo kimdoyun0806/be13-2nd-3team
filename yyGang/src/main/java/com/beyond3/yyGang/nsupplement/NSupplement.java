@@ -1,8 +1,12 @@
 package com.beyond3.yyGang.nsupplement;
 
+import com.beyond3.yyGang.handler.exception.NSupplementException;
+import com.beyond3.yyGang.handler.message.ExceptionMessage;
 import com.beyond3.yyGang.nsupplement.dto.NSupplementModifyDto;
+import com.beyond3.yyGang.nsupplement.dto.NSupplementRegisterDto;
 import com.beyond3.yyGang.review.domain.Review;
 import com.beyond3.yyGang.user.domain.User;
+import io.micrometer.common.util.StringUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,7 +22,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +53,8 @@ public class NSupplement {
 
     private int reviewCount;    // 전체 리뷰 수
 
+    private String productImage;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
     private User seller;
@@ -72,13 +77,29 @@ public class NSupplement {
             this.brand = dto.getBrand();
         }
 
+//        if(StringUtils.isNotBlank(dto.getProductImage())){
+//            this.productImage = dto.getProductImage();
+//        }
+        this.productImage = dto.getProductImage();
+
         Optional.of(dto.getPrice()).ifPresent(this::setPrice);
         Optional.of(dto.getStockQuantity()).ifPresent(this::setStockQuantity);
     }
 
+    public NSupplementRegisterDto toDto(){
+        return NSupplementRegisterDto.builder()
+                .productName(productName)
+                .brand(this.brand)
+                .caution(this.caution)
+                .price(this.price)
+                .stockQuantity(this.stockQuantity)
+                .productImage(this.productImage)
+                .build();
+    }
+
     public void decreaseStockQuantity(int quantity){
         if(stockQuantity - quantity < 0){
-            throw new IllegalStateException("재고가 충분하지 않습니다.");
+            throw new NSupplementException(ExceptionMessage.OUT_OF_STOCK);
         }
         this.stockQuantity -= quantity;
     }

@@ -20,4 +20,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     void deleteByEmail(String email);
 
+    @Query("SELECT u FROM User u ORDER BY u.email DESC")
+    List<User> findAllDesc();
+
+    User findEmailByUserId(Long userId);
 }

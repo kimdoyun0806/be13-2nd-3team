@@ -19,7 +19,6 @@ import java.util.List;
 @RequestMapping("/qboard")
 @RequiredArgsConstructor
 @Tag(name = "Answer", description = "약 질문에 대한 답글")
-@CrossOrigin(origins="http://localhost:8080")
 public class AnswerController {
     private final AnswerService answerService;
 

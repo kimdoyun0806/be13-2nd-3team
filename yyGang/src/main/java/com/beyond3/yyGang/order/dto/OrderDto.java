@@ -1,9 +1,9 @@
 package com.beyond3.yyGang.order.dto;
 
-
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import com.beyond3.yyGang.nsupplement.NSupplement;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor

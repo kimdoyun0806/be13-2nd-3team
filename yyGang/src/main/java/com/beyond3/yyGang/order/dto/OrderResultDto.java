@@ -1,6 +1,7 @@
 package com.beyond3.yyGang.order.dto;
 
-import com.beyond3.yyGang.order.domain.OrderStatus;
+import com.beyond3.yyGang.order.OrderOption;
+import com.beyond3.yyGang.order.OrderStatus;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;

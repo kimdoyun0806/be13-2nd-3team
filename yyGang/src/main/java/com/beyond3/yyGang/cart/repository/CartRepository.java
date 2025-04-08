@@ -2,9 +2,6 @@ package com.beyond3.yyGang.cart.repository;
 
 import com.beyond3.yyGang.cart.domain.Cart;
 import com.beyond3.yyGang.cart.domain.CartOption;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,7 +26,10 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
     @Query("select c from Cart c join fetch c.cartOptions co join fetch co.nSupplement ns where c.user.email = :userEmail")
     Optional<Cart> findByUserEmailWithCartOptions(@Param("userEmail") String email);
 
-    @Query("select co from CartOption co join fetch co.cart c where c.user.email = :userEmail")
+    @Query("select co " +
+            "from CartOption co " +
+            "join fetch co.cart c " +
+            "where c.user.email = :userEmail")
     Page<CartOption> findCartOptionByUserEmail(@Param("userEmail") String email, Pageable pageable);
 
     @Query("select co from CartOption co join fetch co.cart c where c.user.email = :userEmail and co.cartOptionID = :cartOptionId")

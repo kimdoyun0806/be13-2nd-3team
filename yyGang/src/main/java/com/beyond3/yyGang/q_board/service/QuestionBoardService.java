@@ -4,6 +4,7 @@ import com.beyond3.yyGang.handler.exception.QuestionBoardException;
 import com.beyond3.yyGang.handler.exception.UserException;
 import com.beyond3.yyGang.handler.message.ExceptionMessage;
 import com.beyond3.yyGang.q_board.QuestionBoard;
+import com.beyond3.yyGang.q_board.dto.QboardPageResponseDto;
 import com.beyond3.yyGang.q_board.dto.QboardRequestDto;
 import com.beyond3.yyGang.q_board.dto.QboardResponseDto;
 import com.beyond3.yyGang.q_board.dto.QboardUpdateDto;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -48,7 +51,7 @@ public class QuestionBoardService {
 
     // 전체 게시글 조회
     @Transactional
-    public Page<QboardResponseDto> getAllQboard(int page, int size) {
+    public QboardPageResponseDto getAllQboard(int page, int size) {
 
         // 입력 받은 page와 size가 유효한 값인지 아닌지 확인
         if(page < 0 || size <= 0){
@@ -64,8 +67,12 @@ public class QuestionBoardService {
             throw new QuestionBoardException(ExceptionMessage.NOT_FOUND_QUESTION_BOARD);
         }
 
+        List<QboardResponseDto> qboardResponseDtos = qboardpage.stream().map(QboardResponseDto::new).toList();
+
+        QboardPageResponseDto qboardPageResponseDto = new QboardPageResponseDto(qboardResponseDtos,qboardpage.getTotalElements());
+
         // responseDto로 변환해서 return
-        return qboardpage.map(QboardResponseDto::new);
+        return qboardPageResponseDto;
     }
 
 
@@ -93,7 +100,7 @@ public class QuestionBoardService {
 
         // 해당 user가 작성한 글 중 해당 id의 글이 있는지 확인
         QuestionBoard questionBoard = questionBoardRepository.findByUserAndQboardId(user, qboardId)
-                .orElseThrow(()-> new QuestionBoardException(ExceptionMessage.NOT_FOUND_QUESTION_BOARD));
+                .orElseThrow(()-> new QuestionBoardException(ExceptionMessage.CANNOT_EDIT_CONTENTS));
 
         // 게시글 수정 시 수정사항이 있는 경우만 update 하도록
         questionBoard.update(requestDto.getTitle(), requestDto.getContent());
@@ -111,7 +118,7 @@ public class QuestionBoardService {
 
         // 사용자가 작성한 해당 id의 게시글이 있는지 확인
         QuestionBoard questionBoard = questionBoardRepository.findByUserAndQboardId(user, qboardId)
-                .orElseThrow(()-> new QuestionBoardException(ExceptionMessage.NOT_FOUND_QUESTION_BOARD));
+                .orElseThrow(()-> new QuestionBoardException(ExceptionMessage.CANNOT_EDIT_CONTENTS));
 
         // 게시글 삭제
         questionBoardRepository.delete(questionBoard);

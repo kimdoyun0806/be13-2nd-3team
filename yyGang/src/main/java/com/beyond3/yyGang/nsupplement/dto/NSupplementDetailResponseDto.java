@@ -27,24 +27,6 @@ public class NSupplementDetailResponseDto {
 
     private int reviewCount;
 
-//    private List<IngredientName> ingredients = new ArrayList<>();
+    private String productImage;
 
-//    private List<HFunctionName> healthNames = new ArrayList<>();
-
-//    public NSupplementDetailResponseDto(Long productId, String productName, String caution, String brand, int price, int reviewCount) {
-//        this.productId = productId;
-//        this.productName = productName;
-//        this.caution = caution;
-//        this.brand = brand;
-//        this.price = price;
-//        this.reviewCount = reviewCount;
-//    }
-
-//    public void addIngredient(IngredientName ingredient) {
-//        this.ingredients.add(ingredient);
-//    }
-//
-//    public void addHealthName(HFunctionName healthName) {
-//        this.healthNames.add(healthName);
-//    }
 }

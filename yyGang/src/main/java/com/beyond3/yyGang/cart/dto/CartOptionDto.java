@@ -1,10 +1,10 @@
 package com.beyond3.yyGang.cart.dto;
 
 import com.beyond3.yyGang.cart.domain.CartOption;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder

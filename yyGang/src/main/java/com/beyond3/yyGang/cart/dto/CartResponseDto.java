@@ -1,15 +1,11 @@
 package com.beyond3.yyGang.cart.dto;
 
-import com.beyond3.yyGang.cart.domain.Cart;
-import com.beyond3.yyGang.cart.domain.CartOption;
-import com.beyond3.yyGang.cart.repository.CartOptionRepository;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-
 
 @Builder
 @Data
@@ -23,7 +19,7 @@ public class CartResponseDto {
 
     private int totalCount;
 
-    public static CartResponseDto fromCart(Long cartId, List<CartOptionDto> cartOptions,int totalCount) {
+    public static CartResponseDto fromCart(Long cartId, List<CartOptionDto> cartOptions, int totalCount) {
         return CartResponseDto.builder()
                 .cartId(cartId)
                 .cartOptions(cartOptions)

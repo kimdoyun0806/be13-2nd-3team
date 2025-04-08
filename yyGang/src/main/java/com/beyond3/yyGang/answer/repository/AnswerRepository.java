@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
+
 public interface AnswerRepository extends JpaRepository<Answer, Long> {
 
     // answerId와 qboardId를 만족하는 answer가 있는지?

@@ -40,7 +40,6 @@
     const formData = reactive({
         email: '',
         password: ''
-        
     });
 
     // defineEmits : 컴포넌트에서 부모 컴포넌트로 이벤트 발생시킬 때 사용

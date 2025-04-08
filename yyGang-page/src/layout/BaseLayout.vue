@@ -13,7 +13,7 @@
         <div class="content">
           <Sidebar id="side-bar" :class="{ open: isSidebarVisible }" @toggle-sidebar="toggleSidebar"></Sidebar>
 
-          <div id="main-content">
+        <div id="main-content">
       <RouterView></RouterView>
     </div>
   </div>
@@ -24,7 +24,6 @@
 
 <script setup>
 import { ref } from 'vue';
-
 import { RouterView, useRoute } from 'vue-router';
 import Footer from '@/components/common/Footer.vue';
 import Header from '@/components/common/Header.vue';

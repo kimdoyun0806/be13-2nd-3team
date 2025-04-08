@@ -26,33 +26,33 @@
         <!-- 건강 카테고리 -->
 <!-- 건강 카테고리 -->
 <div class="mb-4">
-<h5 class="mb-2">건강 카테고리</h5>
-<div class="d-flex flex-wrap">
+  <h5 class="mb-2">건강 카테고리</h5>
+  <div class="d-flex flex-wrap">
     <button
-    v-for="tag in healthTags"
-    :key="tag.id"
-    :class="['btn btn-tag', { 'selected-health': selectedHealthIds.includes(tag.id) }]"
-    @click="toggleHealthId(tag.id)"
+      v-for="tag in healthTags"
+      :key="tag.id"
+      :class="['btn btn-tag', { 'selected-health': selectedHealthIds.includes(tag.id) }]"
+      @click="toggleHealthId(tag.id)"
     >
     # {{ healthNameMap[tag.name] || tag.name }}
     </button>
-</div>
+  </div>
 </div>
 
 
 <!-- 성분 카테고리 -->
 <div class="mb-4">
-<h5 class="mb-2">성분 카테고리</h5>
-<div class="d-flex flex-wrap">
+  <h5 class="mb-2">성분 카테고리</h5>
+  <div class="d-flex flex-wrap">
     <button
-    v-for="tag in ingredientTags"
-    :key="tag.id"
-    :class="['btn btn-tag', { 'selected-ingredient': selectedingredientIds.includes(tag.id) }]"
-    @click="toggleIngredientId(tag.id)"
+      v-for="tag in ingredientTags"
+      :key="tag.id"
+      :class="['btn btn-tag', { 'selected-ingredient': selectedingredientIds.includes(tag.id) }]"
+      @click="toggleIngredientId(tag.id)"
     >
     # {{ ingredientNameMap[tag.name] || tag.name }}
     </button>
-</div>
+  </div>
 </div>
 
 
@@ -66,8 +66,8 @@
     import apiClient from '@/api';
     import { onMounted, reactive, ref, watch } from 'vue';
     import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
+    import Pagination from '@/components/common/Pagination.vue';
     import NSupplementTable from '@/components/tables/NSupplementTable.vue';
-    import Pagination from '../common/Pagination.vue';
 
     const nsupplements = ref([]);
     const currentRoute = useRoute();
@@ -78,34 +78,33 @@
     const ingredientTags = ref([]);
     const selectedHealthIds = ref([]);
     const selectedingredientIds = ref([]);
+    
     const pageInfo = reactive({
         currentPage: parseInt(currentRoute.query.page) || 1,
         totalElements: 0, // 전체 데이터 수
         pageLimit: 5, // 페이지네이션에 보이는 페이지의 수
         listLimit: 0 // 한 페이지에 표시될 리스트의 수
     });
-
-    console.log(currentRoute.query.page);
     
 
     const healthNameMap = {
-GUT_HEALTH: "장 건강",
-EYE: "눈 건강",
-FATIGUE: "피로 개선",
-SKIN_HEALTH: "피부 건강",
-LIVER: "간 건강",
-SLEEP: "수면 개선",
-JOINT_HEALTH: "관절 건강",
-FITNESS: "체력 증진",
-BODY_FAT: "체지방 감소"
+  GUT_HEALTH: "장 건강",
+  EYE: "눈 건강",
+  FATIGUE: "피로 개선",
+  SKIN_HEALTH: "피부 건강",
+  LIVER: "간 건강",
+  SLEEP: "수면 개선",
+  JOINT_HEALTH: "관절 건강",
+  FITNESS: "체력 증진",
+  BODY_FAT: "체지방 감소"
 }
 
 const ingredientNameMap = {
-LUTEIN: "루테인",
-MAGNESIUM: "마그네슘",
-PROTEIN: "단백질",
-VITAMIN_B1: "비타민 B1",
-VITAMIN_B3: "비타민 B3"
+  LUTEIN: "루테인",
+  MAGNESIUM: "마그네슘",
+  PROTEIN: "단백질",
+  VITAMIN_B1: "비타민 B1",
+  VITAMIN_B3: "비타민 B3"
 }
 
     const fetchNSupplement = async (page) => {
@@ -115,8 +114,8 @@ VITAMIN_B3: "비타민 B3"
                 params: {
                     productName: searchKeyword.value || undefined,
                     sortType: sortType.value || undefined,
-                    // healthIds: selectedHealthIds.value.length > 0 ? selectedHealthIds.value : undefined,
-                    // ingredientIds: selectedingredientIds.value.length > 0 ? selectedingredientIds.value : undefined,
+                    healthIds: selectedHealthIds.value.length > 0 ? selectedHealthIds.value : undefined,
+                    ingredientIds: selectedingredientIds.value.length > 0 ? selectedingredientIds.value : undefined,
                     page: page - 1,
                     size: 10
                 },
@@ -134,6 +133,7 @@ VITAMIN_B3: "비타민 B3"
                 }
             });
             
+            console.log(response);
             nsupplements.value = response.data.content;
             pageInfo.totalElements = response.data.totalElements;
             pageInfo.listLimit = 10;
@@ -143,39 +143,39 @@ VITAMIN_B3: "비타민 B3"
         }
     };
 
-    // const fetchHealthTags = async () => {
-    // try {
-    //     const response = await apiClient.get('/hfuncitems')
+    const fetchHealthTags = async () => {
+    try {
+        const response = await apiClient.get('/hfuncitems')
         
-    //     const map = response.data.healthMap;
+        const map = response.data.healthMap;
 
-    //     // 객체를 [{ id: 1, name: '비타민' }, ...] 형태로 변환
-    //     healthTags.value = Object.entries(map).map(([id, name]) => ({
-    //     id: Number(id),
-    //     name
-    //     }))
-    // } catch (error) {
-    //     console.log(error);
+        // 객체를 [{ id: 1, name: '비타민' }, ...] 형태로 변환
+        healthTags.value = Object.entries(map).map(([id, name]) => ({
+        id: Number(id),
+        name
+        }))
+    } catch (error) {
+        console.log(error);
         
-    // }
-    // };
+    }
+    };
 
-    // const fetchIngredientTags = async () => {
-    // try {
-    //     const response = await apiClient.get('/ingredients')
+    const fetchIngredientTags = async () => {
+    try {
+        const response = await apiClient.get('/ingredients')
         
-    //     const map = response.data.ingredientMap;
+        const map = response.data.ingredientMap;
 
-    //     // 객체를 [{ id: 1, name: '비타민' }, ...] 형태로 변환
-    //     ingredientTags.value = Object.entries(map).map(([id, name]) => ({
-    //     id: Number(id),
-    //     name
-    //     }))
-    // } catch (error) {
-    //     console.log(error);
+        // 객체를 [{ id: 1, name: '비타민' }, ...] 형태로 변환
+        ingredientTags.value = Object.entries(map).map(([id, name]) => ({
+        id: Number(id),
+        name
+        }))
+    } catch (error) {
+        console.log(error);
         
-    // }
-    // };
+    }
+    };
 
     const changePage = ({page, totalPages}) => {
         
@@ -267,8 +267,8 @@ VITAMIN_B3: "비타민 B3"
 //     selectedHealthIds.value = [];
 //   }
 
-        // fetchHealthTags();
-        // fetchIngredientTags();
+        fetchHealthTags();
+        fetchIngredientTags();
 
         fetchNSupplement(pageInfo.currentPage);
     });
@@ -277,33 +277,33 @@ VITAMIN_B3: "비타민 B3"
 <style scoped>
 
 h5 {
-font-weight: bold;
-margin-bottom: 0.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
 
 .btn-tag {
-border-radius: 20px;
-border: 1px solid #ccc;
-background-color: #fff;
-padding: 5px 15px;
-margin: 3px;
-font-size: 0.9rem;
-transition: background-color 0.2s, color 0.2s;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  padding: 5px 15px;
+  margin: 3px;
+  font-size: 0.9rem;
+  transition: background-color 0.2s, color 0.2s;
 }
 .btn-tag:hover {
-background-color: #f0f0f0;
+  background-color: #f0f0f0;
 }
 
 .btn-tag.selected-health {
-background-color: #198754; 
-color: #fff;
-border-color: #198754;
+  background-color: #198754; 
+  color: #fff;
+  border-color: #198754;
 }
 
 .btn-tag.selected-ingredient {
-background-color: #fd7e14; 
-color: #fff;
-border-color: #fd7e14;
+  background-color: #fd7e14; 
+  color: #fff;
+  border-color: #fd7e14;
 }
 
 </style>

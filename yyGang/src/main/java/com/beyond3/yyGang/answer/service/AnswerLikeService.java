@@ -39,7 +39,7 @@ public class AnswerLikeService {
 
         Optional<AnswerLike> userAnswerLike = answerLikeRepository.findByUserAndAnswer(user, answer);
 
-        if (userAnswerLike.isPresent()) {
+        if(userAnswerLike.isPresent()) {
             // 값이 존재하는 경우 -> 이미 좋아요를 누른 경우
             throw new QuestionBoardException(ExceptionMessage.ANSWER_ALREADY_LIKED);
         }
@@ -66,7 +66,7 @@ public class AnswerLikeService {
 
         // 사용자가 좋아요를 눌렀는지 아닌지 확인
         AnswerLike answerLike = answerLikeRepository.findByUserAndAnswer(user, answer)
-                .orElseThrow(() -> new QuestionBoardException(ExceptionMessage.ANSWER_NOT_LIKED));
+                .orElseThrow(()-> new QuestionBoardException(ExceptionMessage.ANSWER_NOT_LIKED));
 
         // 누른 적 없는 경우 삭제
         answerLikeRepository.delete(answerLike);

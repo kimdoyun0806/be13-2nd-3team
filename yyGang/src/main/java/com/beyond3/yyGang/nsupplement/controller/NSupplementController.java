@@ -1,19 +1,23 @@
 package com.beyond3.yyGang.nsupplement.controller;
 
+
+import com.beyond3.yyGang.handler.exception.NSupplementException;
+import com.beyond3.yyGang.handler.message.ExceptionMessage;
 import com.beyond3.yyGang.nsupplement.NSupplement;
 import com.beyond3.yyGang.nsupplement.dto.*;
 import com.beyond3.yyGang.nsupplement.repository.NSupplementRepository;
 import com.beyond3.yyGang.nsupplement.repository.SortType;
 import com.beyond3.yyGang.nsupplement.service.NSupplementService;
+import com.beyond3.yyGang.review.dto.ReviewPageResponseDto;
 import com.beyond3.yyGang.review.dto.ReviewRequestDto;
 import com.beyond3.yyGang.review.dto.ReviewResponseDto;
 import com.beyond3.yyGang.review.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,18 +31,18 @@ import java.util.List;
 @RequestMapping("/nsupplement")
 @RequiredArgsConstructor
 @Tag(name = "Nsupplement", description = "영양제 관련 기능")
-@CrossOrigin(origins="http://localhost:8080")
 public class NSupplementController {
 
+    // 확인용
     private final NSupplementService nSupplementService;
-    private final ReviewService reviewService;
     private final NSupplementRepository nSupplementRepository;
+    private final ReviewService reviewService;
 
     @PostMapping
     @Operation(summary = "상품 등록", description = "SELLER 만 상품 등록이 가능하다.")
     public ResponseEntity<String> register(
             Principal principal,
-            @RequestBody NSupplementRegisterDto nSupplementRegisterDto) {
+            @RequestBody @Valid NSupplementRegisterDto nSupplementRegisterDto) {
 
         String email = principal.getName();
         nSupplementService.registerProduct(email, nSupplementRegisterDto);
@@ -49,14 +53,39 @@ public class NSupplementController {
     @GetMapping
     @Operation(summary = "상품 확인", description = "판매자만 상품 조회 가능 / 본인이 등록한 상품만 조회 가능")
     // Seller 입장에서 등록한 상품들 확인
-    public ResponseEntity<List<NSupplementRegisterDto>> info(
+    public ResponseEntity<List<NSupplementResponseDto>> info(
             Principal principal
     ) {
         String email = principal.getName();
-        List<NSupplementRegisterDto> allNSupplements = nSupplementService.getAllNSupplements(email);
+        List<NSupplementResponseDto> allNSupplements = nSupplementService.getNSupplementsBySeller(email);
 
         return ResponseEntity.ok(allNSupplements);
     }
+
+    @GetMapping("/info")
+    public ResponseEntity<List<NSupplementRegisterDto>> info() {
+
+        return ResponseEntity.ok(nSupplementService.getAllNSupplements());
+    }
+
+    @GetMapping("/productImage/{nSupplementId}")
+    public ResponseEntity<String> getProductImage(@PathVariable Long nSupplementId) {
+
+        String productImageByProductId = nSupplementRepository.findProductImageByProductId(nSupplementId)
+                .orElseThrow(() -> new NSupplementException(ExceptionMessage.CANNOT_FOUND_PRODUCTS));
+
+        return ResponseEntity.ok(productImageByProductId);
+    }
+
+    @GetMapping("/{nSupplementId}")
+    public ResponseEntity<NSupplementDetailResponseDto> detail(@PathVariable Long nSupplementId) {
+        NSupplement nSupplement = nSupplementRepository.findByproductId(nSupplementId).orElseThrow(() -> new RuntimeException("nSupplement not found"));
+
+        NSupplementDetailResponseDto nSupplementDetailResponseDto = new NSupplementDetailResponseDto(nSupplement.getProductId(), nSupplement.getProductName(), nSupplement.getCaution(), nSupplement.getBrand(), nSupplement.getPrice(), nSupplement.getReviewCount(), nSupplement.getProductImage());
+
+        return ResponseEntity.ok(nSupplementDetailResponseDto);
+    }
+
 
     @DeleteMapping("/{nSupplementId}")
     @Operation(summary = "상품 삭제", description = "해당 상품을 등록한 판매자만 삭제 가능")
@@ -70,8 +99,6 @@ public class NSupplementController {
         return ResponseEntity.ok("상품 삭제가 완료되었습니다.");
     }
 
-
-
     @PostMapping("/{nSupplementId}")
     @Operation(summary = "상품 수정", description = "해당 상품을 등록한 판매자만 수정 가능")
     public ResponseEntity<String> modify(
@@ -80,24 +107,49 @@ public class NSupplementController {
             @RequestBody NSupplementModifyDto nSupplementModifyDto
     ){
         String email = principal.getName();
+        log.info("modify: {}", nSupplementModifyDto);
         nSupplementService.modifyProduct(email, nSupplementId,nSupplementModifyDto);
 
         return ResponseEntity.ok("상품 수정이 완료되었습니다.");
     }
 
-    // 특정 상품 리뷰 조회  ->  페이징 처리
+//    // 특정 상품 리뷰 조회  ->  페이징 처리
+//    @GetMapping("/{nSupplementId}/review")
+//    @Operation(summary = "상품 리뷰 조회", description = "특정 상품에 대한 모든 리뷰 조회")
+//    public ResponseEntity<List<ReviewResponseDto>> viewReview(
+//            @PathVariable("nSupplementId") Long productId,
+//            @RequestParam(name = "page", defaultValue = "0") int page,
+//            @RequestParam(name = "size", defaultValue = "10") int size) {
+//
+//        // 특정 상품에 대한 리뷰이기 때문에 사용자는 필요 x
+//        List<ReviewResponseDto> reviewResponseDtos = reviewService.viewReview(productId, page, size);
+//
+//        // 전체 리뷰들이 보이도록
+//        return ResponseEntity.ok(reviewResponseDtos);
+//    }
+
     @GetMapping("/{nSupplementId}/review")
     @Operation(summary = "상품 리뷰 조회", description = "특정 상품에 대한 모든 리뷰 조회")
-    public ResponseEntity<List<ReviewResponseDto>> viewReview(
+    public ResponseEntity<ReviewPageResponseDto> viewReview(
             @PathVariable("nSupplementId") Long productId,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "10") int size) {
 
         // 특정 상품에 대한 리뷰이기 때문에 사용자는 필요 x
-        List<ReviewResponseDto> reviewResponseDtos = reviewService.viewReview(productId, page, size);
+        ReviewPageResponseDto reviewPageResponseDto = reviewService.viewReview(productId, page, size);
 
         // 전체 리뷰들이 보이도록
-        return ResponseEntity.ok(reviewResponseDtos);
+        return ResponseEntity.ok(reviewPageResponseDto);
+    }
+    @GetMapping("/{nSupplementId}/review/my")
+    @Operation(summary = "내 리뷰 조회", description = "특정 회원이 작성한 상품 리뷰 조회")
+    public ResponseEntity<String> getReview(
+            Principal principal,
+            @PathVariable("nSupplementId") Long productId) {
+
+        String reviewContent = reviewService.getReview(principal.getName(), productId);
+
+        return ResponseEntity.ok(reviewContent);
     }
 
     // 리뷰 삭제
@@ -119,7 +171,7 @@ public class NSupplementController {
     public ResponseEntity<ReviewResponseDto> registerReview(
             Principal principal,
             @PathVariable("nSupplementId") Long productId,
-            @RequestBody ReviewRequestDto reviewRequestDto) {
+            @RequestBody @Valid ReviewRequestDto reviewRequestDto) {
 
         String email = principal.getName();
         ReviewResponseDto reviewResponseDto = reviewService.registerReview(email, reviewRequestDto, productId);
@@ -135,7 +187,7 @@ public class NSupplementController {
     public ResponseEntity<ReviewResponseDto> modifyReview(
             Principal principal,
             @PathVariable("nSupplementId") Long productId,
-            @RequestBody ReviewRequestDto reviewRequestDto) {
+            @RequestBody @Valid ReviewRequestDto reviewRequestDto) {
 
         String email = principal.getName();
         ReviewResponseDto reviewResponseDto = reviewService.modifyReview(email, productId, reviewRequestDto);
@@ -152,20 +204,11 @@ public class NSupplementController {
             @RequestParam(required = false) List<Long> ingredientIds,
             // DB 컬럼명이 아니라 엔티티 필드명을 기준으로 정렬, 일단 기본 정렬은 SortType.requestSortType 메소드에 설정함
             // size = -1 or page = -1 처럼 음수가 들어오는 상황 예외처리 할지, 너무 큰 값이 들어오면 max값 제한할지
-            @PageableDefault(size = 10, page = 0) Pageable pageable) {
+            @PageableDefault(size = 10, page = 0/*, sort = "price", direction = Sort.Direction.ASC*/) Pageable pageable) {
 
         NSupplementSearchRequestDtoV2 nSupplementSearchRequestDtoV2 = new NSupplementSearchRequestDtoV2(productName, healthIds, ingredientIds, sortType);
         PageResponseDto<NSupplementResponseDtoV2> page = nSupplementRepository.searchPageV2(nSupplementSearchRequestDtoV2, pageable, SortType.requestSortType(nSupplementSearchRequestDtoV2.getSortType()));
+        log.info(page.toString());
         return ResponseEntity.ok(page);
     }
-
-    @GetMapping("/{nSupplementId}")
-    public ResponseEntity<NSupplementDetailResponseDto> detail(@PathVariable Long nSupplementId) {
-        NSupplement nSupplement = nSupplementRepository.findByproductId(nSupplementId).orElseThrow(() -> new RuntimeException("nSupplement not found"));
-
-        NSupplementDetailResponseDto nSupplementDetailResponseDto = new NSupplementDetailResponseDto(nSupplement.getProductId(), nSupplement.getProductName(), nSupplement.getCaution(), nSupplement.getBrand(), nSupplement.getPrice(), nSupplement.getReviewCount());
-
-        return ResponseEntity.ok(nSupplementDetailResponseDto);
-    }
-
 }
