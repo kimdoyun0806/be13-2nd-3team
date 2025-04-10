@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)  // 기본 생성자 자동 추가 막음
 @Builder
 public class User implements UserDetails {
-    // 젠킨젠킨젠킨젠킨젠킨
+
     // 기본키 userId
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
