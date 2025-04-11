@@ -1,3 +1,6 @@
-FROM openjdk:23-jdk-slim
-ADD /build/libs/*.jar app.jar
-ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "/app.jar"]
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+COPY build/libs/yyGang-0.0.1-SNAPSHOT.jar app.jar
+ENV TZ=Asia/Seoul
+EXPOSE 8088
+CMD ["java", "-jar", "app.jar"]
