@@ -25,11 +25,13 @@ pipeline {
 
         stage('Docker Build & Push') {
             steps {
-                sh """
-                    docker build -t ${IMAGE_NAME}:${TAG} .
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push ${IMAGE_NAME}:${TAG}
-                """
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-access', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh """
+                        docker build -t ${IMAGE_NAME}:${TAG} .
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push ${IMAGE_NAME}:${TAG}
+                    """
+                }
             }
         }
 
