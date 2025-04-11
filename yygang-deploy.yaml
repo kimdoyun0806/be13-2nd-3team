@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yygang-api-deploy
+  labels:
+    app: yygang-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yygang-api
+  template:
+    metadata:
+      labels:
+        app: yygang-api
+    spec:
+      containers:
+        - name: yygang-api
+          image: kimdoyun0806/yygang-api:latest
+          ports:
+            - containerPort: 8088
+          env:
+            - name: TZ
+              value: Asia/Seoul
+            - name: SPRING_PROFILES_ACTIVE
+              value: dev
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8088
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8088
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8088
+            failureThreshold: 10
+            periodSeconds: 10
