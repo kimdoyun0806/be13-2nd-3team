@@ -1,39 +1,54 @@
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: gradle
+    image: gradle:8.5-jdk21-alpine
+    command:
+    - cat
+    tty: true
+"""
+        }
+    }
     environment {
         IMAGE_NAME = 'kimdoyun0806/yygang-api'
         TAG = 'latest'
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                sh 'pwd'
-                sh 'ls -al'
-            }
-        }
-
         stage('Build') {
             steps {
-                dir('yyGang') {
-                    sh 'chmod +x ./gradlew'
-                    sh './gradlew clean build'
+                container('gradle') {
+                    dir('yyGang') {
+                        sh 'chmod +x ./gradlew'
+                        sh './gradlew clean build'
+                    }
                 }
             }
         }
 
-        stage('Docker Build') {
+        stage('Docker Build & Push') {
             steps {
-                sh "docker build --build-arg BUILD_PORT=8088 -t $IMAGE_NAME:$TAG ."
+                container('gradle') {
+                    sh '''
+                        docker build -t $IMAGE_NAME:$TAG .
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                        docker push $IMAGE_NAME:$TAG
+                    '''
+                }
             }
         }
 
-        stage('Docker Push') {
+        stage('K8s Deploy') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                container('gradle') {
                     sh '''
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push $IMAGE_NAME:$TAG
+                        kubectl apply -f ./yygang-deploy.yaml
+                        kubectl apply -f ./yygang-service.yaml
                     '''
                 }
             }
