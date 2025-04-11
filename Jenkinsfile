@@ -15,7 +15,10 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh './gradlew clean build'
+                dir('yyGang') {
+                    sh 'chmod +x ./gradlew'
+                    sh './gradlew clean build'
+                }
             }
         }
 
